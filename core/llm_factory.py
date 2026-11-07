@@ -5,8 +5,22 @@ from dotenv import load_dotenv
 # Ensure environment variables are loaded
 load_dotenv()
 
-_DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-_DEFAULT_MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "ministral-8b-latest")
+def get_env_key(*names: str) -> str:
+    """
+    Looks up environment variables by multiple aliases and case-insensitively.
+    Supports GEMINI_API_KEY, GOOGLE_API_KEY, MISTRAL_API_KEY, etc.
+    """
+    for name in names:
+        val = os.getenv(name)
+        if val and val.strip():
+            return val.strip()
+        for k, v in os.environ.items():
+            if k.lower() == name.lower() and v and v.strip():
+                return v.strip()
+    return ""
+
+_DEFAULT_GEMINI_MODEL = get_env_key("GEMINI_MODEL") or "gemini-2.0-flash"
+_DEFAULT_MISTRAL_MODEL = get_env_key("MISTRAL_MODEL") or "ministral-8b-latest"
 
 def get_llm(
     provider: Optional[str] = None,
@@ -22,8 +36,15 @@ def get_llm(
     Gracefully falls back if one provider hits quota/rate limits.
     Supports API keys passed dynamically per request or from server environment variables.
     """
-    mistral_key = (mistral_api_key or os.getenv("MISTRAL_API_KEY", "")).strip()
-    gemini_key = (gemini_api_key or os.getenv("GEMINI_API_KEY", "")).strip()
+    mistral_key = (
+        mistral_api_key or
+        get_env_key("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY")
+    ).strip()
+
+    gemini_key = (
+        gemini_api_key or
+        get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY")
+    ).strip()
 
     # Determine default provider - prioritize Mistral for Mistral AI Summarizer
     if provider is None:

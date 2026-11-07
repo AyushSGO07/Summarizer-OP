@@ -21,7 +21,7 @@ if ROOT_DIR not in sys.path:
 
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
-from core.llm_factory import get_llm
+from core.llm_factory import get_llm, get_env_key
 from core.summarise import summarise
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions
 from core.translator import translate_to_hindi
@@ -99,16 +99,19 @@ class RAGQueryRequest(BaseModel):
     gemini_api_key: Optional[str] = None
 
 def _resolve_keys(request: Request, mistral_arg: Optional[str] = None, gemini_arg: Optional[str] = None):
-    mk = mistral_arg or request.headers.get("x-mistral-api-key") or os.getenv("MISTRAL_API_KEY", "")
-    gk = gemini_arg or request.headers.get("x-gemini-api-key") or os.getenv("GEMINI_API_KEY", "")
+    mk = mistral_arg or request.headers.get("x-mistral-api-key") or get_env_key("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY")
+    gk = gemini_arg or request.headers.get("x-gemini-api-key") or get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY")
     return (mk.strip() if mk else None), (gk.strip() if gk else None)
 
 # ----------------- Endpoints -----------------
 
 @app.get("/health")
-def health():
-    mistral_configured = bool(os.getenv("MISTRAL_API_KEY", "").strip())
-    gemini_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
+def health(request: Request):
+    mistral_h = request.headers.get("x-mistral-api-key")
+    gemini_h = request.headers.get("x-gemini-api-key")
+
+    mistral_configured = bool(mistral_h or get_env_key("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY"))
+    gemini_configured = bool(gemini_h or get_env_key("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY"))
     ffmpeg_available = bool(shutil.which("ffmpeg"))
 
     return {
@@ -117,7 +120,7 @@ def health():
         "mistral_available": mistral_configured,
         "gemini_available": gemini_configured,
         "ffmpeg_available": ffmpeg_available,
-        "default_mistral_model": os.getenv("MISTRAL_MODEL", "ministral-8b-latest"),
+        "default_mistral_model": get_env_key("MISTRAL_MODEL") or "ministral-8b-latest",
         "chroma_dir_exists": os.path.exists(CHROMA_DIR),
         "active_document": _current_doc_info["doc_name"]
     }

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { settingsService } from "../services/settingsService";
-import { aiService } from "../services/aiService";
+import { aiService, getEnvKey } from "../services/aiService";
 
 export const settingsController = {
   getSettings(_req: Request, res: Response, next: NextFunction) {
@@ -23,14 +23,21 @@ export const settingsController = {
 
   async getSystemHealth(_req: Request, res: Response, next: NextFunction) {
     try {
-      const aiHealth = await aiService.getHealth();
+      const aiHealth = await aiService.getHealth().catch(() => ({}));
       const settings = settingsService.getSettings();
+
+      const nodeMistral = Boolean(getEnvKey("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY"));
+      const nodeGemini = Boolean(getEnvKey("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY"));
 
       res.json({
         success: true,
         data: {
           nodeBackend: "healthy",
-          aiService: aiHealth,
+          aiService: {
+            ...aiHealth,
+            mistral_available: Boolean(aiHealth?.mistral_available || nodeMistral),
+            gemini_available: Boolean(aiHealth?.gemini_available || nodeGemini)
+          },
           currentSettings: settings
         }
       });

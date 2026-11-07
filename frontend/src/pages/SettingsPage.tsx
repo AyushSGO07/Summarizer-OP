@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Cpu,
   Database,
@@ -13,7 +13,7 @@ import { Navbar } from "../components/Navbar";
 import { useApp } from "../context/AppContext";
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, systemHealth, showToast } = useApp();
+  const { settings, updateSettings, systemHealth, showToast, refreshHealth } = useApp();
   const [provider, setProvider] = useState<"mistral" | "gemini">(settings.provider);
   const [mistralModel, setMistralModel] = useState(settings.mistralModel);
   const [geminiModel, setGeminiModel] = useState(settings.geminiModel);
@@ -39,6 +39,10 @@ export const SettingsPage: React.FC = () => {
   const [showGeminiKey, setShowGeminiKey] = useState(false);
 
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    refreshHealth();
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +73,8 @@ export const SettingsPage: React.FC = () => {
         ragTopK,
         summaryLength
       });
+
+      await refreshHealth();
 
       showToast("Settings and API keys saved successfully!", "success");
     } finally {

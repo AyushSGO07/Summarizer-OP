@@ -22,20 +22,30 @@ export interface ApiKeys {
   geminiApiKey?: string;
 }
 
+export function getEnvKey(...names: string[]): string | undefined {
+  for (const name of names) {
+    for (const [k, v] of Object.entries(process.env)) {
+      if (k.toLowerCase() === name.toLowerCase() && v && v.trim()) {
+        return v.trim();
+      }
+    }
+  }
+  return undefined;
+}
+
 function buildHeaders(extraHeaders: Record<string, any> = {}, keys?: ApiKeys) {
   const headers = { ...extraHeaders };
-  if (keys?.mistralApiKey) {
-    headers["x-mistral-api-key"] = keys.mistralApiKey;
-  }
-  if (keys?.geminiApiKey) {
-    headers["x-gemini-api-key"] = keys.geminiApiKey;
-  }
+  const mistral = keys?.mistralApiKey || getEnvKey("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY");
+  const gemini = keys?.geminiApiKey || getEnvKey("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY");
+
+  if (mistral) headers["x-mistral-api-key"] = mistral;
+  if (gemini) headers["x-gemini-api-key"] = gemini;
   return headers;
 }
 
 export const aiService = {
   async getHealth() {
-    const res = await api.get("/health");
+    const res = await api.get("/health", { headers: buildHeaders() });
     return res.data;
   },
 
