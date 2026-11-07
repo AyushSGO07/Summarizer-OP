@@ -17,6 +17,22 @@ api.interceptors.request.use((reqConfig) => {
   return reqConfig;
 });
 
+export interface ApiKeys {
+  mistralApiKey?: string;
+  geminiApiKey?: string;
+}
+
+function buildHeaders(extraHeaders: Record<string, any> = {}, keys?: ApiKeys) {
+  const headers = { ...extraHeaders };
+  if (keys?.mistralApiKey) {
+    headers["x-mistral-api-key"] = keys.mistralApiKey;
+  }
+  if (keys?.geminiApiKey) {
+    headers["x-gemini-api-key"] = keys.geminiApiKey;
+  }
+  return headers;
+}
+
 export const aiService = {
   async getHealth() {
     const res = await api.get("/health");
@@ -34,41 +50,72 @@ export const aiService = {
   },
 
   async ingestFile(filePath: string, originalName: string) {
+    const fileBuffer = fs.readFileSync(filePath);
     const form = new FormData();
-    form.append("file", fs.createReadStream(filePath), originalName);
+    form.append("file", fileBuffer, { filename: originalName });
+
+    const formHeaders = form.getHeaders();
+    const headers = {
+      ...formHeaders,
+      "Content-Length": form.getLengthSync()
+    };
 
     const res = await api.post("/ai/ingest-file", form, {
-      headers: form.getHeaders(),
+      headers,
       maxContentLength: Infinity,
       maxBodyLength: Infinity
     });
     return res.data;
   },
 
-  async summarize(text: string, provider?: string, model?: string, length?: string) {
-    const res = await api.post("/ai/summarize", {
-      text,
-      provider,
-      model,
-      length: length || "medium"
-    });
+  async summarize(text: string, provider?: string, model?: string, length?: string, keys?: ApiKeys) {
+    const res = await api.post(
+      "/ai/summarize",
+      {
+        text,
+        provider,
+        model,
+        length: length || "medium",
+        mistral_api_key: keys?.mistralApiKey,
+        gemini_api_key: keys?.geminiApiKey
+      },
+      {
+        headers: buildHeaders({}, keys)
+      }
+    );
     return res.data;
   },
 
-  async translate(text: string, provider?: string, targetLang: string = "hindi") {
-    const res = await api.post("/ai/translate", {
-      text,
-      provider,
-      target_lang: targetLang
-    });
+  async translate(text: string, provider?: string, targetLang: string = "hindi", keys?: ApiKeys) {
+    const res = await api.post(
+      "/ai/translate",
+      {
+        text,
+        provider,
+        target_lang: targetLang,
+        mistral_api_key: keys?.mistralApiKey,
+        gemini_api_key: keys?.geminiApiKey
+      },
+      {
+        headers: buildHeaders({}, keys)
+      }
+    );
     return res.data;
   },
 
-  async extractInsights(text: string, provider?: string) {
-    const res = await api.post("/ai/extract-insights", {
-      text,
-      provider
-    });
+  async extractInsights(text: string, provider?: string, keys?: ApiKeys) {
+    const res = await api.post(
+      "/ai/extract-insights",
+      {
+        text,
+        provider,
+        mistral_api_key: keys?.mistralApiKey,
+        gemini_api_key: keys?.geminiApiKey
+      },
+      {
+        headers: buildHeaders({}, keys)
+      }
+    );
     return res.data;
   },
 
@@ -81,24 +128,39 @@ export const aiService = {
   },
 
   async ragIndexFile(filePath: string, originalName: string) {
+    const fileBuffer = fs.readFileSync(filePath);
     const form = new FormData();
-    form.append("file", fs.createReadStream(filePath), originalName);
+    form.append("file", fileBuffer, { filename: originalName });
+
+    const formHeaders = form.getHeaders();
+    const headers = {
+      ...formHeaders,
+      "Content-Length": form.getLengthSync()
+    };
 
     const res = await api.post("/ai/rag/index-file", form, {
-      headers: form.getHeaders(),
+      headers,
       maxContentLength: Infinity,
       maxBodyLength: Infinity
     });
     return res.data;
   },
 
-  async ragQuery(query: string, chatHistory: any[] = [], k: number = 4, provider?: string) {
-    const res = await api.post("/ai/rag/query", {
-      query,
-      chat_history: chatHistory,
-      k,
-      provider
-    });
+  async ragQuery(query: string, chatHistory: any[] = [], k: number = 4, provider?: string, keys?: ApiKeys) {
+    const res = await api.post(
+      "/ai/rag/query",
+      {
+        query,
+        chat_history: chatHistory,
+        k,
+        provider,
+        mistral_api_key: keys?.mistralApiKey,
+        gemini_api_key: keys?.geminiApiKey
+      },
+      {
+        headers: buildHeaders({}, keys)
+      }
+    );
     return res.data;
   },
 

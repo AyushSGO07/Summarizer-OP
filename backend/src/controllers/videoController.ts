@@ -28,6 +28,10 @@ export const videoController = {
       const provider = reqProvider || settings.provider;
       const model = provider === "mistral" ? settings.mistralModel : settings.geminiModel;
 
+      const mistralApiKey = (req.headers["x-mistral-api-key"] as string) || req.body.mistralApiKey;
+      const geminiApiKey = (req.headers["x-gemini-api-key"] as string) || req.body.geminiApiKey;
+      const keys = { mistralApiKey, geminiApiKey };
+
       // Step 1: Ingest Video (captions or audio download + Whisper)
       console.log(`[Video Controller] Ingesting video: ${url}`);
       const ingested = await aiService.ingestUrl(url);
@@ -39,18 +43,18 @@ export const videoController = {
 
       // Step 2: Generate English Executive Summary
       console.log(`[Video Controller] Summarizing with ${provider} (${summaryLength})...`);
-      const sumRes = await aiService.summarize(transcript, provider, model, summaryLength);
+      const sumRes = await aiService.summarize(transcript, provider, model, summaryLength, keys);
       const englishSummary = sumRes.summary || "";
 
       // Step 3 & 4: In Parallel - Hindi Translation & Insights Extraction
       const translatePromise = (language === "hindi" || language === "both")
-        ? aiService.translate(englishSummary, provider).catch((e) => {
+        ? aiService.translate(englishSummary, provider, "hindi", keys).catch((e) => {
             console.warn("[Video Controller] Hindi translation warning:", e.message);
             return { translation: "" };
           })
         : Promise.resolve({ translation: "" });
 
-      const insightsPromise = aiService.extractInsights(transcript, provider).catch((e) => {
+      const insightsPromise = aiService.extractInsights(transcript, provider, keys).catch((e) => {
         console.warn("[Video Controller] Insight extraction warning:", e.message);
         return { action_items: "", key_decisions: "", questions: "" };
       });

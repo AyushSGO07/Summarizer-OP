@@ -62,8 +62,12 @@ export const ragController = {
       const provider = reqProvider || settings.provider;
       const k = reqK || settings.ragTopK || 4;
 
+      const mistralApiKey = (req.headers["x-mistral-api-key"] as string) || req.body.mistralApiKey;
+      const geminiApiKey = (req.headers["x-gemini-api-key"] as string) || req.body.geminiApiKey;
+      const keys = { mistralApiKey, geminiApiKey };
+
       console.log(`[RAG Controller] Querying ChromaDB with k=${k}, provider=${provider}: '${query}'`);
-      const result = await aiService.ragQuery(query, chatHistory, k, provider);
+      const result = await aiService.ragQuery(query, chatHistory, k, provider, keys);
 
       res.json({
         success: true,

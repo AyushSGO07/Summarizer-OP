@@ -16,7 +16,12 @@ def split_text_for_translation(text: str, chunk_size: int = 3000, chunk_overlap:
     )
     return splitter.split_text(text)
 
-def translate_to_hindi(text: str, llm_provider: Optional[str] = None) -> str:
+def translate_to_hindi(
+    text: str,
+    llm_provider: Optional[str] = None,
+    mistral_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None
+) -> str:
     """
     Translates English summaries or document contents into natural, readable Hindi
     using an LCEL chain with Mistral AI (or the configured LLM provider).
@@ -25,7 +30,12 @@ def translate_to_hindi(text: str, llm_provider: Optional[str] = None) -> str:
     if not text or not text.strip():
         return "अनुवाद के लिए कोई सामग्री उपलब्ध नहीं है।"
 
-    llm = get_llm(provider=llm_provider, temperature=0.1)
+    llm = get_llm(
+        provider=llm_provider,
+        temperature=0.1,
+        mistral_api_key=mistral_api_key,
+        gemini_api_key=gemini_api_key
+    )
 
     system_instruction = (
         "You are an expert bilingual English-to-Hindi translator.\n"

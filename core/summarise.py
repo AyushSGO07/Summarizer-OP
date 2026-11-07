@@ -17,7 +17,12 @@ def split_transcript(transcript: str, chunk_size: int = 3500, chunk_overlap: int
     )
     return splitter.split_text(transcript)
 
-def summarise(transcription: str, llm_provider: Optional[str] = None) -> str:
+def summarise(
+    transcription: str,
+    llm_provider: Optional[str] = None,
+    mistral_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None
+) -> str:
     """
     Produces a comprehensive, professional executive meeting summary.
     If the transcript is short, uses an optimized single-pass summary.
@@ -26,7 +31,11 @@ def summarise(transcription: str, llm_provider: Optional[str] = None) -> str:
     if not transcription or not transcription.strip():
         return "No transcript available to summarise."
 
-    llm = get_llm(provider=llm_provider)
+    llm = get_llm(
+        provider=llm_provider,
+        mistral_api_key=mistral_api_key,
+        gemini_api_key=gemini_api_key
+    )
 
     # For short to medium transcripts, single-pass produces the most coherent summary
     if len(transcription.strip()) <= 4000:

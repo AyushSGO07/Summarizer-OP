@@ -1,5 +1,21 @@
 [
   {
+    "title": "test_doc.txt",
+    "sourceType": "document",
+    "filename": "test_doc.txt",
+    "charCount": 144,
+    "provider": "mistral",
+    "model": "ministral-8b-latest",
+    "englishSummary": "**Meeting Summary: Project Roadmap & Q1 Deliverables**\n\n**Executive Overview**\nThe meeting aligned on the **Q1 project roadmap** and **key deliverables**, ensuring cross-team alignment to meet deadlines. The focus was on **prioritizing high-impact initiatives** while addressing resource constraints.\n\n**Primary Discussion Points**\n- Confirmed **Q1 milestones** (e.g., [X], [Y]) with adjusted timelines.\n- Clarified **ownership** for deliverables (e.g., [Team A] leads [Task 1], [Team B] for [Task 2]).\n- Identified **potential roadblocks** (e.g., [Resource gap], [Dependency on [Team C]]).\n\n**Conclusions & Next Steps**\n- **Approved roadmap** with minor adjustments to timelines.\n- **Action Items**:\n  - [Team A] to finalize [Deliverable 1] by [date].\n  - [Team B] to escalate [Resource Request] to [Stakeholder].\n- **Follow-up**: Weekly syncs to track progress.\n\n*Next meeting: [Date] to review progress and Q2 planning.*",
+    "hindiSummary": "**मीटिंग सारांश: प्रोजेक्ट रोडमैप और Q1 डिलीवरएबल्स**\n\n**एग्जीक्यूटिव ओवरव्यू**\nमीटिंग में **Q1 प्रोजेक्ट रोडमैप** और **प्रमुख डिलीवरएबल्स (Key Deliverables)** पर सहमति बनाई गई, जिससे समय सीमा (deadlines) को पूरा करने के लिए क्रॉस-टीम अलाइनमेंट सुनिश्चित हो सके। इस दौरान संसाधनों की कमी (resource constraints) को दूर करते हुए **हाई-इम्पैक्ट पहलों को प्राथमिकता देने** पर ध्यान केंद्रित किया गया।\n\n**मुख्य चर्चा बिंदु**\n- संशोधित समयसीमा के साथ **Q1 माइलस्टोन** (जैसे, [X], [Y]) की पुष्टि की गई।\n- डिलीवरएबल्स के लिए **ओनरशिप** स्पष्ट की गई (जैसे, [Team A] [Task 1] का नेतृत्व करेगी, [Team B] [Task 2] के लिए ज़िम्मेदार होगी)।\n- **संभावित बाधाओं (Roadblocks)** की पहचान की गई (जैसे, [Resource gap], [[Team C] पर निर्भरता]).\n\n**निष्कर्ष और अगले कदम**\n- समयसीमा में मामूली बदलावों के साथ **रोडमैप स्वीकृत** किया गया।\n- **एक्शन आइटम्स**:\n  - [Team A] [date] तक [Deliverable 1] को अंतिम रूप देगी।\n  - [Team B] [Resource Request] को [Stakeholder] के पास उठाएगी।\n- **फॉलो-अप**: प्रगति को ट्रैक करने के लिए साप्ताहिक सिंक (Weekly syncs)।\n\n*अगली मीटिंग: प्रगति और Q2 की योजना की समीक्षा करने के लिए [Date]*",
+    "actionItems": "No action items found in the meeting.",
+    "keyDecisions": "No key decisions recorded in the meeting.",
+    "questions": "No unresolved questions found.",
+    "transcript": "T\u0000h\u0000i\u0000s\u0000 \u0000i\u0000s\u0000 \u0000a\u0000 \u0000t\u0000e\u0000s\u0000t\u0000 \u0000d\u0000o\u0000c\u0000u\u0000m\u0000e\u0000n\u0000t\u0000 \u0000a\u0000b\u0000o\u0000u\u0000t\u0000 \u0000p\u0000r\u0000o\u0000j\u0000e\u0000c\u0000t\u0000 \u0000r\u0000o\u0000a\u0000d\u0000m\u0000a\u0000p\u0000 \u0000a\u0000n\u0000d\u0000 \u0000d\u0000e\u0000l\u0000i\u0000v\u0000e\u0000r\u0000a\u0000b\u0000l\u0000e\u0000s\u0000 \u0000f\u0000o\u0000r\u0000 \u0000Q\u00001\u0000.\u0000\n\u0000\n\u0000",
+    "id": "c027e693-ce35-46fc-8b45-697c6f192ba6",
+    "createdAt": "2026-11-07T17:04:12.108Z"
+  },
+  {
     "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
     "sourceType": "video",
     "sourceUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",

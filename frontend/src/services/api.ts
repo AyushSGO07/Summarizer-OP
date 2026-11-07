@@ -6,6 +6,21 @@ const api = axios.create({
   timeout: 180000 // 3 minutes timeout for long video processing
 });
 
+// Automatically inject client-provided API keys (if set by user in Settings)
+api.interceptors.request.use((reqConfig) => {
+  try {
+    const mistralKey = localStorage.getItem("mistral_api_key");
+    const geminiKey = localStorage.getItem("gemini_api_key");
+    if (mistralKey) {
+      reqConfig.headers["x-mistral-api-key"] = mistralKey.trim();
+    }
+    if (geminiKey) {
+      reqConfig.headers["x-gemini-api-key"] = geminiKey.trim();
+    }
+  } catch {}
+  return reqConfig;
+});
+
 export const videoApi = {
   async getMetadata(url: string): Promise<VideoMetadata> {
     const res = await api.post("/video/metadata", { url });

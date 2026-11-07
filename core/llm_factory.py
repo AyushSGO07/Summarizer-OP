@@ -12,15 +12,18 @@ def get_llm(
     provider: Optional[str] = None,
     model_name: Optional[str] = None,
     temperature: float = 0.2,
-    streaming: bool = False
+    streaming: bool = False,
+    mistral_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None
 ):
     """
     Returns an instantiated LangChain Chat model.
     Prioritizes Mistral AI (or Gemini) based on availability and provider preference.
     Gracefully falls back if one provider hits quota/rate limits.
+    Supports API keys passed dynamically per request or from server environment variables.
     """
-    mistral_key = os.getenv("MISTRAL_API_KEY", "").strip()
-    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    mistral_key = (mistral_api_key or os.getenv("MISTRAL_API_KEY", "")).strip()
+    gemini_key = (gemini_api_key or os.getenv("GEMINI_API_KEY", "")).strip()
 
     # Determine default provider - prioritize Mistral for Mistral AI Summarizer
     if provider is None:
@@ -35,12 +38,24 @@ def get_llm(
             provider = "gemini"
         else:
             raise ValueError(
-                "No AI API key found! Please set MISTRAL_API_KEY or GEMINI_API_KEY in your "
-                "Vercel Project Dashboard (Settings -> Environment Variables) or in your local .env file."
+                "No AI API key found! Please configure your MISTRAL_API_KEY or GEMINI_API_KEY "
+                "in Settings (or in your Vercel Project Dashboard under Settings -> Environment Variables)."
             )
 
     # Initialize Gemini
     if provider.lower() in ("gemini", "google"):
+        if not gemini_key:
+            if mistral_key:
+                from langchain_mistralai import ChatMistralAI
+                return ChatMistralAI(
+                    model=_DEFAULT_MISTRAL_MODEL,
+                    mistral_api_key=mistral_key,
+                    temperature=temperature,
+                    streaming=streaming,
+                    timeout=30
+                )
+            raise ValueError("GEMINI_API_KEY not found. Please provide it in Settings or set it in Vercel Environment Variables.")
+        
         from langchain_google_genai import ChatGoogleGenerativeAI
         selected_model = model_name or os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite"
         gemini_chat = ChatGoogleGenerativeAI(
@@ -63,6 +78,17 @@ def get_llm(
 
     # Initialize Mistral
     elif provider.lower() == "mistral":
+        if not mistral_key:
+            if gemini_key:
+                from langchain_google_genai import ChatGoogleGenerativeAI
+                return ChatGoogleGenerativeAI(
+                    model=_DEFAULT_GEMINI_MODEL,
+                    google_api_key=gemini_key,
+                    temperature=temperature,
+                    streaming=streaming
+                )
+            raise ValueError("MISTRAL_API_KEY not found. Please provide it in Settings or set it in Vercel Environment Variables.")
+        
         from langchain_mistralai import ChatMistralAI
         selected_model = model_name or _DEFAULT_MISTRAL_MODEL
         mistral_chat = ChatMistralAI(

@@ -92,18 +92,23 @@ def load_rag_chain(
     collection_name: str = COLLECTION_NAME,
     persist_directory: str = CHROMA_DIR,
     k: int = 4,
-    llm_provider: Optional[str] = None
+    llm_provider: Optional[str] = None,
+    mistral_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None
 ):
     """
     Loads an existing vector store and returns a ready-to-use RAG chain.
-    Fixed previous bug where build_vector_store() was called with empty args.
     """
     vector_store = load_vector_store(
         collection_name=collection_name,
         persist_directory=persist_directory
     )
     retriever = get_retriever(vector_store, k=k)
-    llm = get_llm(provider=llm_provider)
+    llm = get_llm(
+        provider=llm_provider,
+        mistral_api_key=mistral_api_key,
+        gemini_api_key=gemini_api_key
+    )
     prompt = build_rag_prompt()
 
     rag_chain = (
@@ -125,7 +130,9 @@ def ask_rag(
     persist_directory: str = CHROMA_DIR,
     chat_history: Optional[List[Dict[str, str]]] = None,
     k: int = 4,
-    llm_provider: Optional[str] = None
+    llm_provider: Optional[str] = None,
+    mistral_api_key: Optional[str] = None,
+    gemini_api_key: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     End-to-end question answering against the vector store with citation details.
@@ -156,7 +163,11 @@ def ask_rag(
                 formatted_history.append(("human", content))
 
     prompt = build_rag_prompt()
-    llm = get_llm(provider=llm_provider)
+    llm = get_llm(
+        provider=llm_provider,
+        mistral_api_key=mistral_api_key,
+        gemini_api_key=gemini_api_key
+    )
     chain = prompt | llm | StrOutputParser()
 
     answer = chain.invoke({

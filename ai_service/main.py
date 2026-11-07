@@ -10,7 +10,7 @@ import tempfile
 import shutil
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -66,15 +66,21 @@ class SummarizeRequest(BaseModel):
     provider: Optional[str] = None
     model: Optional[str] = None
     length: Optional[str] = "medium"  # short, medium, detailed
+    mistral_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
 class TranslateRequest(BaseModel):
     text: str
     provider: Optional[str] = None
     target_lang: Optional[str] = "hindi"
+    mistral_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
 class InsightsRequest(BaseModel):
     text: str
     provider: Optional[str] = None
+    mistral_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
 
 class RAGIndexTextRequest(BaseModel):
     text: str
@@ -89,6 +95,13 @@ class RAGQueryRequest(BaseModel):
     chat_history: Optional[List[ChatMessage]] = Field(default_factory=list)
     k: Optional[int] = 4
     provider: Optional[str] = None
+    mistral_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
+
+def _resolve_keys(request: Request, mistral_arg: Optional[str] = None, gemini_arg: Optional[str] = None):
+    mk = mistral_arg or request.headers.get("x-mistral-api-key") or os.getenv("MISTRAL_API_KEY", "")
+    gk = gemini_arg or request.headers.get("x-gemini-api-key") or os.getenv("GEMINI_API_KEY", "")
+    return (mk.strip() if mk else None), (gk.strip() if gk else None)
 
 # ----------------- Endpoints -----------------
 
@@ -167,7 +180,7 @@ async def ingest_file(file: UploadFile = File(...)):
                 pass
 
 @app.post("/ai/summarize")
-def generate_summary(req: SummarizeRequest):
+def generate_summary(req: SummarizeRequest, request: Request):
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
@@ -179,36 +192,52 @@ def generate_summary(req: SummarizeRequest):
     elif req.length == "detailed":
         guided_text = f"[Directive: Generate an exhaustive, comprehensive breakdown covering all subtopics and nuances in detail]\n\n{text}"
 
+    mistral_k, gemini_k = _resolve_keys(request, req.mistral_api_key, req.gemini_api_key)
+
     try:
-        summary = summarise(guided_text, llm_provider=req.provider)
+        summary = summarise(
+            guided_text,
+            llm_provider=req.provider,
+            mistral_api_key=mistral_k,
+            gemini_api_key=gemini_k
+        )
         return {"summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Summarization failed: {str(e)}")
 
 @app.post("/ai/translate")
-def translate(req: TranslateRequest):
+def translate(req: TranslateRequest, request: Request):
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
+    mistral_k, gemini_k = _resolve_keys(request, req.mistral_api_key, req.gemini_api_key)
+
     try:
-        translation = translate_to_hindi(text, llm_provider=req.provider)
+        translation = translate_to_hindi(
+            text,
+            llm_provider=req.provider,
+            mistral_api_key=mistral_k,
+            gemini_api_key=gemini_k
+        )
         return {"translation": translation}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
 
 @app.post("/ai/extract-insights")
-def extract_insights(req: InsightsRequest):
+def extract_insights(req: InsightsRequest, request: Request):
     text = req.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
+    mistral_k, gemini_k = _resolve_keys(request, req.mistral_api_key, req.gemini_api_key)
+
     try:
         from concurrent.futures import ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=3) as executor:
-            fut_actions = executor.submit(extract_action_items, text, req.provider)
-            fut_decisions = executor.submit(extract_key_decisions, text, req.provider)
-            fut_questions = executor.submit(extract_questions, text, req.provider)
+            fut_actions = executor.submit(extract_action_items, text, req.provider, mistral_k, gemini_k)
+            fut_decisions = executor.submit(extract_key_decisions, text, req.provider, mistral_k, gemini_k)
+            fut_questions = executor.submit(extract_questions, text, req.provider, mistral_k, gemini_k)
 
             actions = fut_actions.result()
             decisions = fut_decisions.result()
@@ -304,10 +333,12 @@ async def rag_index_file(file: UploadFile = File(...)):
                 pass
 
 @app.post("/ai/rag/query")
-def rag_query(req: RAGQueryRequest):
+def rag_query(req: RAGQueryRequest, request: Request):
     query = req.query.strip()
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
+
+    mistral_k, gemini_k = _resolve_keys(request, req.mistral_api_key, req.gemini_api_key)
 
     try:
         vs = load_vector_store(collection_name="meeting_transcript")
@@ -318,7 +349,10 @@ def rag_query(req: RAGQueryRequest):
             vector_store=vs,
             chat_history=chat_hist,
             k=req.k or 4,
-            llm_provider=req.provider
+            llm_provider=req.provider,
+            mistral_api_key=mistral_k,
+            gemini_api_key=gemini_k
+        )
         )
 
         return {

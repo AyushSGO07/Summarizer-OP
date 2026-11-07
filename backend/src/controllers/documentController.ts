@@ -20,6 +20,10 @@ export const documentController = {
       const provider = reqProvider || settings.provider;
       const model = provider === "mistral" ? settings.mistralModel : settings.geminiModel;
 
+      const mistralApiKey = (req.headers["x-mistral-api-key"] as string) || req.body.mistralApiKey;
+      const geminiApiKey = (req.headers["x-gemini-api-key"] as string) || req.body.geminiApiKey;
+      const keys = { mistralApiKey, geminiApiKey };
+
       console.log(`[Document Controller] Ingesting document: ${originalName}`);
       const ingested = await aiService.ingestFile(filePath, originalName);
       const text = ingested.text;
@@ -29,18 +33,18 @@ export const documentController = {
       }
 
       console.log(`[Document Controller] Generating summary (${text.length} chars) with ${provider}...`);
-      const sumRes = await aiService.summarize(text, provider, model, summaryLength);
+      const sumRes = await aiService.summarize(text, provider, model, summaryLength, keys);
       const englishSummary = sumRes.summary || "";
 
       // Run Hindi translation and Insights extraction concurrently to minimize latency
       const translatePromise = (language === "hindi" || language === "both")
-        ? aiService.translate(englishSummary, provider).catch((e) => {
+        ? aiService.translate(englishSummary, provider, "hindi", keys).catch((e) => {
             console.warn("[Document Controller] Hindi translation warning:", e.message);
             return { translation: "" };
           })
         : Promise.resolve({ translation: "" });
 
-      const insightsPromise = aiService.extractInsights(text, provider).catch((e) => {
+      const insightsPromise = aiService.extractInsights(text, provider, keys).catch((e) => {
         console.warn("[Document Controller] Insight extraction warning:", e.message);
         return { action_items: "", key_decisions: "", questions: "" };
       });
