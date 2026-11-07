@@ -353,7 +353,6 @@ def rag_query(req: RAGQueryRequest, request: Request):
             mistral_api_key=mistral_k,
             gemini_api_key=gemini_k
         )
-        )
 
         return {
             "answer": result.get("answer", ""),
