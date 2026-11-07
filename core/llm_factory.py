@@ -1,0 +1,84 @@
+import os
+from typing import Optional
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded
+load_dotenv()
+
+_DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+_DEFAULT_MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "ministral-8b-latest")
+
+def get_llm(
+    provider: Optional[str] = None,
+    model_name: Optional[str] = None,
+    temperature: float = 0.2,
+    streaming: bool = False
+):
+    """
+    Returns an instantiated LangChain Chat model.
+    Prioritizes Mistral AI (or Gemini) based on availability and provider preference.
+    Gracefully falls back if one provider hits quota/rate limits.
+    """
+    mistral_key = os.getenv("MISTRAL_API_KEY", "").strip()
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    # Determine default provider - prioritize Mistral for Mistral AI Summarizer
+    if provider is None:
+        default_pref = os.getenv("DEFAULT_LLM_PROVIDER", "mistral").strip().lower()
+        if default_pref == "mistral" and mistral_key:
+            provider = "mistral"
+        elif default_pref in ("gemini", "google") and gemini_key:
+            provider = "gemini"
+        elif mistral_key:
+            provider = "mistral"
+        elif gemini_key:
+            provider = "gemini"
+        else:
+            raise ValueError("No API key found. Please set MISTRAL_API_KEY or GEMINI_API_KEY in .env")
+
+    # Initialize Gemini
+    if provider.lower() in ("gemini", "google"):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        selected_model = model_name or os.getenv("GEMINI_MODEL") or "gemini-3.5-flash-lite"
+        gemini_chat = ChatGoogleGenerativeAI(
+            model=selected_model,
+            google_api_key=gemini_key,
+            temperature=temperature,
+            streaming=streaming
+        )
+        if mistral_key:
+            from langchain_mistralai import ChatMistralAI
+            fallback_chat = ChatMistralAI(
+                model=_DEFAULT_MISTRAL_MODEL,
+                mistral_api_key=mistral_key,
+                temperature=temperature,
+                streaming=streaming,
+                timeout=30
+            )
+            return gemini_chat.with_fallbacks([fallback_chat])
+        return gemini_chat
+
+    # Initialize Mistral
+    elif provider.lower() == "mistral":
+        from langchain_mistralai import ChatMistralAI
+        selected_model = model_name or _DEFAULT_MISTRAL_MODEL
+        mistral_chat = ChatMistralAI(
+            model=selected_model,
+            mistral_api_key=mistral_key,
+            temperature=temperature,
+            streaming=streaming,
+            timeout=30
+        )
+        if gemini_key:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            fallback_chat = ChatGoogleGenerativeAI(
+                model=_DEFAULT_GEMINI_MODEL,
+                google_api_key=gemini_key,
+                temperature=temperature,
+                streaming=streaming
+            )
+            return mistral_chat.with_fallbacks([fallback_chat])
+        return mistral_chat
+
+    else:
+        raise ValueError(f"Unsupported LLM provider: {provider}")

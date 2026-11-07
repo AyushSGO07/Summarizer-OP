@@ -1,0 +1,9 @@
+{
+  "provider": "mistral",
+  "mistralModel": "ministral-8b-latest",
+  "geminiModel": "gemini-3.5-flash-lite",
+  "ragTopK": 4,
+  "summaryLength": "medium",
+  "targetLanguage": "both",
+  "theme": "dark"
+}

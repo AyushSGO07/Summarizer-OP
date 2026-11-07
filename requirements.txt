@@ -1,0 +1,57 @@
+fastapi>=0.115.0
+uvicorn>=0.32.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-dotenv>=1.0.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
+httpx>=0.27.0
+cachetools>=5.5.0
+supabase>=2.10.0
+pyjwt[crypto]>=2.9.0
+email-validator>=2.0.0
+
+# LLM and LangChain
+langchain
+langchain-core
+langchain-community
+langchain-mistralai
+
+# Mistral AI
+mistralai
+
+# Vector Database
+chromadb
+langchain-chroma
+
+# Hugging Face Embeddings
+sentence-transformers
+transformers
+torch
+huggingface-hub
+
+# Document Processing
+pypdf
+python-docx
+unstructured
+
+# Video / Audio Processing
+youtube-transcript-api
+yt-dlp
+openai-whisper
+
+# URL Processing
+requests
+beautifulsoup4
+
+# Environment Variables
+python-dotenv
+
+# Application Interface (if using Streamlit)
+streamlit
+
+# Utilities
+tiktoken
+numpy
+pandas
