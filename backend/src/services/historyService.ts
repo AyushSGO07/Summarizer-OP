@@ -22,14 +22,18 @@ export interface SummaryRecord {
   createdAt: string;
 }
 
-const historyFilePath = path.join(config.dataDir, "history.json");
+function getHistoryFilePath(): string {
+  return path.join(config.dataDir, "history.json");
+}
 
 function ensureDataFile() {
-  if (!fs.existsSync(config.dataDir)) {
-    fs.mkdirSync(config.dataDir, { recursive: true });
+  const dir = config.dataDir;
+  const filePath = getHistoryFilePath();
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
-  if (!fs.existsSync(historyFilePath)) {
-    fs.writeFileSync(historyFilePath, JSON.stringify([], null, 2), "utf-8");
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify([], null, 2), "utf-8");
   }
 }
 
@@ -37,7 +41,7 @@ export const historyService = {
   getAll(): SummaryRecord[] {
     ensureDataFile();
     try {
-      const data = fs.readFileSync(historyFilePath, "utf-8");
+      const data = fs.readFileSync(getHistoryFilePath(), "utf-8");
       return JSON.parse(data) || [];
     } catch {
       return [];
@@ -58,7 +62,7 @@ export const historyService = {
       createdAt: new Date().toISOString()
     };
     list.unshift(newRecord);
-    fs.writeFileSync(historyFilePath, JSON.stringify(list, null, 2), "utf-8");
+    fs.writeFileSync(getHistoryFilePath(), JSON.stringify(list, null, 2), "utf-8");
     return newRecord;
   },
 
@@ -67,7 +71,7 @@ export const historyService = {
     const list = this.getAll();
     const filtered = list.filter((item) => item.id !== id);
     if (filtered.length !== list.length) {
-      fs.writeFileSync(historyFilePath, JSON.stringify(filtered, null, 2), "utf-8");
+      fs.writeFileSync(getHistoryFilePath(), JSON.stringify(filtered, null, 2), "utf-8");
       return true;
     }
     return false;
@@ -75,7 +79,7 @@ export const historyService = {
 
   clear(): void {
     ensureDataFile();
-    fs.writeFileSync(historyFilePath, JSON.stringify([], null, 2), "utf-8");
+    fs.writeFileSync(getHistoryFilePath(), JSON.stringify([], null, 2), "utf-8");
   },
 
   getStats() {

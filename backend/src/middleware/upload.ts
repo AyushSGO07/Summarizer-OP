@@ -4,13 +4,13 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { config } from "../config";
 
-if (!fs.existsSync(config.uploadDir)) {
-  fs.mkdirSync(config.uploadDir, { recursive: true });
-}
-
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, config.uploadDir);
+    const dir = config.uploadDir;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
   },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);

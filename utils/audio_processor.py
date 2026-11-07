@@ -10,8 +10,14 @@ import docx
 import requests
 from bs4 import BeautifulSoup
 
-DOWNLOAD_DIR = "downloads"
-CHUNKS_DIR = "chunks"
+import tempfile
+
+if os.environ.get("VERCEL"):
+    DOWNLOAD_DIR = os.path.join(tempfile.gettempdir(), "downloads")
+    CHUNKS_DIR = os.path.join(tempfile.gettempdir(), "chunks")
+else:
+    DOWNLOAD_DIR = "downloads"
+    CHUNKS_DIR = "chunks"
 
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 os.makedirs(CHUNKS_DIR, exist_ok=True)

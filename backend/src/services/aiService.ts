@@ -4,8 +4,14 @@ import FormData from "form-data";
 import { config } from "../config";
 
 const api = axios.create({
-  baseURL: config.aiServiceUrl,
   timeout: 180000 // 3 minutes timeout for long video transcription
+});
+
+// Dynamically resolve AI_SERVICE_URL at runtime on every request to support Vercel service bindings
+api.interceptors.request.use((reqConfig) => {
+  const rawBase = (process.env.AI_SERVICE_URL || config.aiServiceUrl || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
+  reqConfig.baseURL = rawBase;
+  return reqConfig;
 });
 
 export const aiService = {

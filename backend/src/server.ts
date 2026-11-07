@@ -31,8 +31,8 @@ app.use((req, _res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get("/api/health", (_req, res) => {
+// Health check endpoint (support both /health and /api/health)
+app.get(["/health", "/api/health"], (_req, res) => {
   res.json({
     status: "ok",
     service: "SUMMARIZER OP Backend (Node.js/Express)",
@@ -40,16 +40,21 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// API Routes
+// API Routes mounted on both /api and / to support path-stripped and prefixed rewrites
 app.use("/api", routes);
+app.use("/", routes);
 
 // Centralized Error Handling
 app.use(errorHandler);
 
-// Start Server
-app.listen(config.port, () => {
-  console.log(`=================================================`);
-  console.log(`🚀 SUMMARIZER OP Backend running on port ${config.port}`);
-  console.log(`🔗 Connected AI Microservice at: ${config.aiServiceUrl}`);
-  console.log(`=================================================`);
-});
+// Start Server when not running in test mode
+if (process.env.NODE_ENV !== "test") {
+  app.listen(config.port, () => {
+    console.log(`=================================================`);
+    console.log(`🚀 SUMMARIZER OP Backend running on port ${config.port}`);
+    console.log(`🔗 Connected AI Microservice at: ${config.aiServiceUrl}`);
+    console.log(`=================================================`);
+  });
+}
+
+export default app;

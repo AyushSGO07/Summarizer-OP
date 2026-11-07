@@ -7,7 +7,12 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
-CHROMA_DIR = "vector_db"
+import tempfile
+
+if os.environ.get("VERCEL"):
+    CHROMA_DIR = os.path.join(tempfile.gettempdir(), "vector_db")
+else:
+    CHROMA_DIR = "vector_db"
 COLLECTION_NAME = "meeting_transcript"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 
