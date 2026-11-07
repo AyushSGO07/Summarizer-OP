@@ -34,7 +34,10 @@ def get_llm(
         elif gemini_key:
             provider = "gemini"
         else:
-            raise ValueError("No API key found. Please set MISTRAL_API_KEY or GEMINI_API_KEY in .env")
+            raise ValueError(
+                "No AI API key found! Please set MISTRAL_API_KEY or GEMINI_API_KEY in your "
+                "Vercel Project Dashboard (Settings -> Environment Variables) or in your local .env file."
+            )
 
     # Initialize Gemini
     if provider.lower() in ("gemini", "google"):

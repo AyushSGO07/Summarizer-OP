@@ -9,6 +9,11 @@
       "root": "backend",
       "framework": "express",
       "entrypoint": "src/server.ts",
+      "functions": {
+        "**": {
+          "maxDuration": 60
+        }
+      },
       "bindings": [
         {
           "type": "service",
@@ -21,7 +26,12 @@
     "ai-service": {
       "root": ".",
       "framework": "fastapi",
-      "entrypoint": "ai_service/main.py"
+      "entrypoint": "main:app",
+      "functions": {
+        "**": {
+          "maxDuration": 60
+        }
+      }
     }
   },
   "rewrites": [

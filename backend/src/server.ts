@@ -47,8 +47,8 @@ app.use("/", routes);
 // Centralized Error Handling
 app.use(errorHandler);
 
-// Start Server when not running in test mode
-if (process.env.NODE_ENV !== "test") {
+// Start Server when running locally (not in serverless or test)
+if (!process.env.VERCEL && process.env.NODE_ENV !== "test") {
   app.listen(config.port, () => {
     console.log(`=================================================`);
     console.log(`🚀 SUMMARIZER OP Backend running on port ${config.port}`);
@@ -58,3 +58,9 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 export default app;
+// Support CommonJS consumers and Vercel serverless functions
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = app;
+  (module.exports as any).default = app;
+}
+

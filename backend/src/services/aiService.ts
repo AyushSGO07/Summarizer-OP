@@ -9,7 +9,10 @@ const api = axios.create({
 
 // Dynamically resolve AI_SERVICE_URL at runtime on every request to support Vercel service bindings
 api.interceptors.request.use((reqConfig) => {
-  const rawBase = (process.env.AI_SERVICE_URL || config.aiServiceUrl || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
+  let rawBase = (process.env.AI_SERVICE_URL || config.aiServiceUrl || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
+  if (!rawBase.startsWith("http://") && !rawBase.startsWith("https://")) {
+    rawBase = `https://${rawBase}`;
+  }
   reqConfig.baseURL = rawBase;
   return reqConfig;
 });

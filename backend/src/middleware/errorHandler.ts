@@ -19,6 +19,8 @@ export function errorHandler(err: any, _req: Request, res: Response, _next: Next
   } else if (err.response?.data?.error) {
     const errorObj = err.response.data.error;
     message = typeof errorObj === "object" && errorObj !== null ? JSON.stringify(errorObj) : String(errorObj);
+  } else if (err.response?.data?.message) {
+    message = String(err.response.data.message);
   } else if (err.message) {
     message = String(err.message);
   }

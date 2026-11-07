@@ -110,9 +110,20 @@ export const VideoSummarizerPage: React.FC = () => {
         msg = typeof err.response.data.error === "object"
           ? JSON.stringify(err.response.data.error)
           : String(err.response.data.error);
+      } else if (err.response?.data?.detail) {
+        msg = typeof err.response.data.detail === "object"
+          ? JSON.stringify(err.response.data.detail)
+          : String(err.response.data.detail);
+      } else if (err.response?.data?.message) {
+        msg = String(err.response.data.message);
       } else if (err.message) {
         msg = err.message;
       }
+
+      if (msg.includes("A server error has occurred")) {
+        msg = "Server Error (500): The AI service encountered an issue. Please verify MISTRAL_API_KEY or GEMINI_API_KEY is configured in your Vercel Project Settings (Settings -> Environment Variables).";
+      }
+
       setErrorMessage(msg);
       showToast(msg, "error");
     } finally {
