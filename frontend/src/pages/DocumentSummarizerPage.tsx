@@ -6,6 +6,8 @@ import {
   Sparkles,
   Languages,
   Sliders,
+  AlertCircle,
+  RefreshCw,
   X
 } from "lucide-react";
 import { Navbar } from "../components/Navbar";
@@ -19,10 +21,20 @@ export const DocumentSummarizerPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [processingStage, setProcessingStage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [language, setLanguage] = useState<"english" | "hindi" | "both">("both");
   const [summaryLength, setSummaryLength] = useState<"short" | "medium" | "detailed">("medium");
   const [result, setResult] = useState<SummaryRecord | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const steps = [
+    "Step 1/4: Uploading & extracting document text...",
+    "Step 2/4: Chunking content & building semantic context...",
+    "Step 3/4: Generating executive intelligence summary...",
+    "Step 4/4: Performing Hindi translation & extracting decisions..."
+  ];
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -38,17 +50,19 @@ export const DocumentSummarizerPage: React.FC = () => {
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
+      if (errorMessage) setErrorMessage(null);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      if (errorMessage) setErrorMessage(null);
     }
   };
 
-  const handleSummarize = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSummarize = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!file) {
       showToast("Please select or drop a document first.", "error");
       return;
@@ -56,8 +70,27 @@ export const DocumentSummarizerPage: React.FC = () => {
 
     try {
       setLoading(true);
+      setErrorMessage(null);
       setResult(null);
+
+      setCurrentStep(0);
+      setProcessingStage(steps[0]);
       showToast(`Uploading and analyzing ${file.name}...`, "info");
+
+      const timer1 = setTimeout(() => {
+        setCurrentStep(1);
+        setProcessingStage(steps[1]);
+      }, 4000);
+
+      const timer2 = setTimeout(() => {
+        setCurrentStep(2);
+        setProcessingStage(steps[2]);
+      }, 10000);
+
+      const timer3 = setTimeout(() => {
+        setCurrentStep(3);
+        setProcessingStage(steps[3]);
+      }, 18000);
 
       const formData = new FormData();
       formData.append("file", file);
@@ -66,13 +99,32 @@ export const DocumentSummarizerPage: React.FC = () => {
       formData.append("provider", settings.provider);
 
       const res = await documentApi.summarize(formData);
+
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+
+      if (!res || (!res.englishSummary && !res.hindiSummary)) {
+        throw new Error("Backend completed without returning a valid summary structure.");
+      }
+
       setResult(res);
       showToast("Document summarized successfully!", "success");
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "Failed to process document";
-      showToast(errMsg, "error");
+      let msg = "Failed to process document.";
+      if (err.response?.data?.error) {
+        msg = typeof err.response.data.error === "object"
+          ? JSON.stringify(err.response.data.error)
+          : String(err.response.data.error);
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setErrorMessage(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
+      setProcessingStage("");
+      setCurrentStep(0);
     }
   };
 
@@ -127,8 +179,11 @@ export const DocumentSummarizerPage: React.FC = () => {
                   onClick={(e) => {
                     e.stopPropagation();
                     setFile(null);
+                    setResult(null);
+                    setErrorMessage(null);
                   }}
                   className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                  title="Remove file"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -186,7 +241,7 @@ export const DocumentSummarizerPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !file}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>
@@ -201,6 +256,72 @@ export const DocumentSummarizerPage: React.FC = () => {
             )}
           </button>
         </form>
+
+        {/* Processing Indicator */}
+        {loading && (
+          <div className="p-5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between text-xs font-bold text-purple-900">
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                {processingStage || "Extracting document content..."}
+              </span>
+              <span className="text-purple-600">Please wait</span>
+            </div>
+
+            {/* Step Progress Tracker */}
+            <div className="grid grid-cols-4 gap-2 pt-1">
+              {steps.map((st, idx) => (
+                <div
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    idx <= currentStep
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600"
+                      : "bg-purple-200"
+                  }`}
+                  title={st}
+                />
+              ))}
+            </div>
+
+            <p className="text-[11px] text-slate-500 text-center">
+              Parsing file, processing text embeddings, invoking Mistral AI pipelines, and generating Hindi translations.
+            </p>
+          </div>
+        )}
+
+        {/* Visible Error Card */}
+        {errorMessage && !loading && (
+          <div className="p-4 sm:p-5 rounded-xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row items-start justify-between gap-4 animate-fadeIn">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-rose-900 uppercase tracking-wide">
+                  Processing Failed
+                </h4>
+                <p className="text-xs text-rose-800 leading-relaxed">{errorMessage}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={() => handleSummarize()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retry</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className="p-1.5 text-rose-400 hover:text-rose-700 hover:bg-rose-100 rounded-lg transition-colors"
+                title="Dismiss error"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results Display */}

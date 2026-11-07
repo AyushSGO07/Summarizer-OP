@@ -25,9 +25,9 @@ export const videoApi = {
 
 export const documentApi = {
   async summarize(formData: FormData): Promise<SummaryRecord> {
-    const res = await api.post("/document/summarize", formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+    // Note: Do NOT set Content-Type header manually for FormData in Axios/browser;
+    // the browser automatically sets multipart/form-data with the correct boundary parameter.
+    const res = await api.post("/document/summarize", formData);
     return res.data.data;
   }
 };
@@ -39,9 +39,7 @@ export const ragApi = {
     total_chunks: number;
     suggested_questions: string[];
   }> {
-    const res = await api.post("/rag/index-file", formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+    const res = await api.post("/rag/index-file", formData);
     return res.data.data;
   },
 

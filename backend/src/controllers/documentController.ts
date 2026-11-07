@@ -28,19 +28,25 @@ export const documentController = {
         return res.status(400).json({ success: false, error: "Could not extract readable text from uploaded file." });
       }
 
-      console.log(`[Document Controller] Generating summary (${text.length} chars)...`);
+      console.log(`[Document Controller] Generating summary (${text.length} chars) with ${provider}...`);
       const sumRes = await aiService.summarize(text, provider, model, summaryLength);
-      const englishSummary = sumRes.summary;
+      const englishSummary = sumRes.summary || "";
 
-      let hindiSummary = "";
-      if (language === "hindi" || language === "both") {
-        console.log(`[Document Controller] Translating into Hindi...`);
-        const transRes = await aiService.translate(englishSummary, provider);
-        hindiSummary = transRes.translation;
-      }
+      // Run Hindi translation and Insights extraction concurrently to minimize latency
+      const translatePromise = (language === "hindi" || language === "both")
+        ? aiService.translate(englishSummary, provider).catch((e) => {
+            console.warn("[Document Controller] Hindi translation warning:", e.message);
+            return { translation: "" };
+          })
+        : Promise.resolve({ translation: "" });
 
-      console.log(`[Document Controller] Extracting insights...`);
-      const insights = await aiService.extractInsights(text, provider);
+      const insightsPromise = aiService.extractInsights(text, provider).catch((e) => {
+        console.warn("[Document Controller] Insight extraction warning:", e.message);
+        return { action_items: "", key_decisions: "", questions: "" };
+      });
+
+      const [transRes, insights] = await Promise.all([translatePromise, insightsPromise]);
+      const hindiSummary = transRes?.translation || "";
 
       const historyItem = historyService.create({
         title: originalName,
@@ -64,6 +70,7 @@ export const documentController = {
           title: originalName,
           filename: originalName,
           text,
+          transcript: text,
           englishSummary,
           hindiSummary,
           actionItems: insights.action_items,

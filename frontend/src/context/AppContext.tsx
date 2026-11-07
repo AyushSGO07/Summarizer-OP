@@ -16,7 +16,7 @@ interface AppContextType {
   updateSettings: (partial: Partial<AppSettings>) => Promise<void>;
   refreshHealth: () => Promise<void>;
   toasts: Toast[];
-  showToast: (message: string, type?: "success" | "error" | "info") => void;
+  showToast: (message: any, type?: "success" | "error" | "info") => void;
   removeToast: (id: string) => void;
 }
 
@@ -38,12 +38,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeRagDoc, setActiveRagDoc] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+  const showToast = (message: any, type: "success" | "error" | "info" = "info") => {
+    let cleanMessage = "Notification received.";
+    if (typeof message === "string") {
+      cleanMessage = message;
+    } else if (Array.isArray(message)) {
+      cleanMessage = message
+        .map((m) => (typeof m === "object" && m !== null ? m.msg || m.message || JSON.stringify(m) : String(m)))
+        .join(", ");
+    } else if (typeof message === "object" && message !== null) {
+      cleanMessage =
+        message.error || message.message || message.msg || message.detail || JSON.stringify(message);
+    } else if (message != null) {
+      cleanMessage = String(message);
+    }
+
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message: cleanMessage, type }]);
     setTimeout(() => {
       removeToast(id);
-    }, 4500);
+    }, 5000);
   };
 
   const removeToast = (id: string) => {

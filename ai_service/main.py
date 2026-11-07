@@ -204,9 +204,15 @@ def extract_insights(req: InsightsRequest):
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
     try:
-        actions = extract_action_items(text, llm_provider=req.provider)
-        decisions = extract_key_decisions(text, llm_provider=req.provider)
-        questions = extract_questions(text, llm_provider=req.provider)
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            fut_actions = executor.submit(extract_action_items, text, req.provider)
+            fut_decisions = executor.submit(extract_key_decisions, text, req.provider)
+            fut_questions = executor.submit(extract_questions, text, req.provider)
+
+            actions = fut_actions.result()
+            decisions = fut_decisions.result()
+            questions = fut_questions.result()
 
         return {
             "action_items": actions,

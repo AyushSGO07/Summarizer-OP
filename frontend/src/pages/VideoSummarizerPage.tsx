@@ -6,7 +6,10 @@ import {
   User,
   Loader2,
   Languages,
-  Sliders
+  Sliders,
+  AlertCircle,
+  RefreshCw,
+  X
 } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { SummaryViewer } from "../components/SummaryViewer";
@@ -20,10 +23,19 @@ export const VideoSummarizerPage: React.FC = () => {
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
   const [fetchingMeta, setFetchingMeta] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [processingStage, setProcessingStage] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [language, setLanguage] = useState<"english" | "hindi" | "both">("both");
   const [summaryLength, setSummaryLength] = useState<"short" | "medium" | "detailed">("medium");
   const [result, setResult] = useState<SummaryRecord | null>(null);
+
+  const steps = [
+    "Step 1/4: Ingesting video metadata & transcript...",
+    "Step 2/4: Chunking audio & speech processing...",
+    "Step 3/4: Generating executive intelligence summary...",
+    "Step 4/4: Performing Hindi translation & extracting decisions..."
+  ];
 
   const handleUrlBlur = async () => {
     const trimmed = url.trim();
@@ -32,16 +44,18 @@ export const VideoSummarizerPage: React.FC = () => {
     try {
       setFetchingMeta(true);
       const meta = await videoApi.getMetadata(trimmed);
-      setMetadata(meta);
+      if (meta) {
+        setMetadata(meta);
+      }
     } catch {
-      // Ignored for now, will validate during submit
+      // Ignored: full validation happens during submit
     } finally {
       setFetchingMeta(false);
     }
   };
 
-  const handleSummarize = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSummarize = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const cleanUrl = url.trim();
     if (!cleanUrl) {
       showToast("Please enter a valid YouTube or video URL.", "error");
@@ -50,10 +64,28 @@ export const VideoSummarizerPage: React.FC = () => {
 
     try {
       setLoading(true);
+      setErrorMessage(null);
       setResult(null);
 
-      setProcessingStage("Step 1/4: Ingesting audio transcript & video content...");
+      setCurrentStep(0);
+      setProcessingStage(steps[0]);
       showToast("Starting video transcription & intelligence pipeline...", "info");
+
+      // Progressively advance stage messages while awaiting backend pipeline
+      const timer1 = setTimeout(() => {
+        setCurrentStep(1);
+        setProcessingStage(steps[1]);
+      }, 5000);
+
+      const timer2 = setTimeout(() => {
+        setCurrentStep(2);
+        setProcessingStage(steps[2]);
+      }, 12000);
+
+      const timer3 = setTimeout(() => {
+        setCurrentStep(3);
+        setProcessingStage(steps[3]);
+      }, 20000);
 
       const res = await videoApi.summarize({
         url: cleanUrl,
@@ -62,14 +94,31 @@ export const VideoSummarizerPage: React.FC = () => {
         provider: settings.provider
       });
 
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+
+      if (!res || (!res.englishSummary && !res.hindiSummary)) {
+        throw new Error("Backend completed without returning a valid summary structure.");
+      }
+
       setResult(res);
       showToast("Video summarized successfully!", "success");
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "Failed to process video";
-      showToast(errMsg, "error");
+      let msg = "Failed to process video.";
+      if (err.response?.data?.error) {
+        msg = typeof err.response.data.error === "object"
+          ? JSON.stringify(err.response.data.error)
+          : String(err.response.data.error);
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setErrorMessage(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
       setProcessingStage("");
+      setCurrentStep(0);
     }
   };
 
@@ -95,7 +144,10 @@ export const VideoSummarizerPage: React.FC = () => {
               <input
                 type="url"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 onBlur={handleUrlBlur}
                 placeholder="https://www.youtube.com/watch?v=..."
                 className="w-full pl-10 pr-4 py-3 bg-white border border-[#CBD5E1] focus:border-purple-600 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all shadow-sm"
@@ -125,7 +177,7 @@ export const VideoSummarizerPage: React.FC = () => {
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-slate-500 pt-1">
                   <span className="flex items-center gap-1 font-medium">
                     <User className="w-3.5 h-3.5 text-purple-600" />
-                    {metadata.channel}
+                    {metadata.channel || "YouTube Channel"}
                   </span>
                   {metadata.duration > 0 && (
                     <span className="flex items-center gap-1 font-medium">
@@ -179,7 +231,7 @@ export const VideoSummarizerPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>
@@ -197,16 +249,66 @@ export const VideoSummarizerPage: React.FC = () => {
 
         {/* Processing Indicator */}
         {loading && (
-          <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 space-y-3 animate-fadeIn">
+          <div className="p-5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between text-xs font-bold text-purple-900">
               <span className="flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
-                {processingStage || "Extracting transcript and generating summary..."}
+                <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                {processingStage || "Processing content..."}
               </span>
-              <span>Please wait</span>
+              <span className="text-purple-600">Please wait</span>
             </div>
-            <div className="w-full bg-purple-100 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 h-full w-2/3 animate-pulse"></div>
+
+            {/* Step Progress Tracker */}
+            <div className="grid grid-cols-4 gap-2 pt-1">
+              {steps.map((st, idx) => (
+                <div
+                  key={idx}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    idx <= currentStep
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600"
+                      : "bg-purple-200"
+                  }`}
+                  title={st}
+                />
+              ))}
+            </div>
+
+            <p className="text-[11px] text-slate-500 text-center">
+              Extracting captions, transcribing audio with Whisper, running Mistral LCEL chains, and translating.
+            </p>
+          </div>
+        )}
+
+        {/* Visible Error Card */}
+        {errorMessage && !loading && (
+          <div className="p-4 sm:p-5 rounded-xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row items-start justify-between gap-4 animate-fadeIn">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-rose-900 uppercase tracking-wide">
+                  Summarization Failed
+                </h4>
+                <p className="text-xs text-rose-800 leading-relaxed">{errorMessage}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={() => handleSummarize()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retry</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className="p-1.5 text-rose-400 hover:text-rose-700 hover:bg-rose-100 rounded-lg transition-colors"
+                title="Dismiss error"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}

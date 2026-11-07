@@ -40,19 +40,23 @@ export const videoController = {
       // Step 2: Generate English Executive Summary
       console.log(`[Video Controller] Summarizing with ${provider} (${summaryLength})...`);
       const sumRes = await aiService.summarize(transcript, provider, model, summaryLength);
-      const englishSummary = sumRes.summary;
+      const englishSummary = sumRes.summary || "";
 
-      // Step 3: Hindi Translation
-      let hindiSummary = "";
-      if (language === "hindi" || language === "both") {
-        console.log(`[Video Controller] Translating summary to Hindi...`);
-        const transRes = await aiService.translate(englishSummary, provider);
-        hindiSummary = transRes.translation;
-      }
+      // Step 3 & 4: In Parallel - Hindi Translation & Insights Extraction
+      const translatePromise = (language === "hindi" || language === "both")
+        ? aiService.translate(englishSummary, provider).catch((e) => {
+            console.warn("[Video Controller] Hindi translation warning:", e.message);
+            return { translation: "" };
+          })
+        : Promise.resolve({ translation: "" });
 
-      // Step 4: Extract Insights (Actions & Decisions)
-      console.log(`[Video Controller] Extracting action items and key decisions...`);
-      const insights = await aiService.extractInsights(transcript, provider);
+      const insightsPromise = aiService.extractInsights(transcript, provider).catch((e) => {
+        console.warn("[Video Controller] Insight extraction warning:", e.message);
+        return { action_items: "", key_decisions: "", questions: "" };
+      });
+
+      const [transRes, insights] = await Promise.all([translatePromise, insightsPromise]);
+      const hindiSummary = transRes?.translation || "";
 
       // Step 5: Save Record to Persistent History
       const historyItem = historyService.create({
@@ -78,6 +82,7 @@ export const videoController = {
           title: historyItem.title,
           url,
           transcript,
+          text: transcript,
           englishSummary,
           hindiSummary,
           actionItems: insights.action_items,
