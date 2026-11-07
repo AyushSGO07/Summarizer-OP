@@ -1,5 +1,37 @@
 [
   {
+    "title": "test_doc3.txt",
+    "sourceType": "document",
+    "filename": "test_doc3.txt",
+    "charCount": 224,
+    "provider": "mistral",
+    "model": "ministral-8b-latest",
+    "englishSummary": "### **Executive Overview**\nProject Apollo successfully completed Milestone 3 of the mobile app redesign. The sprint review highlighted exceptional technical performance, achieving a 98% pass rate on integration tests. \n\n### **Primary Discussion Points**\n* **Milestone 3 Completion:** Finalized the current phase of the mobile app redesign.\n* **Testing Metrics:** Integration tests performed exceptionally well, yielding a 98% pass rate.\n\n### **Conclusions & Next Steps**\nThe team concluded that the current sprint objectives were successfully met. Next steps involve proceeding to the subsequent phases of the Project Apollo mobile app redesign based on these positive test results.",
+    "hindiSummary": "### **Executive Overview**\nProject Apollo ने मोबाइल ऐप रेडिजाइन के Milestone 3 को सफलतापूर्वक पूरा कर लिया है। Sprint review में असाधारण तकनीकी प्रदर्शन पर प्रकाश डाला गया, जिसमें इंटीग्रेशन टेस्ट्स पर 98% पास रेट हासिल हुआ।\n\n### **Primary Discussion Points**\n* **Milestone 3 Completion:** मोबाइल ऐप रेडिजाइन के वर्तमान चरण को अंतिम रूप दे दिया गया है।\n* **Testing Metrics:** इंटीग्रेशन टेस्ट्स ने बेहद अच्छा प्रदर्शन किया, जिससे 98% पास रेट प्राप्त हुआ।\n\n### **Conclusions & Next Steps**\nटीम ने निष्कर्ष निकाला कि वर्तमान sprint उद्देश्यों को सफलतापूर्वक पूरा कर लिया गया है। अगले चरणों में इन सकारात्मक परीक्षण परिणामों के आधार पर Project Apollo मोबाइल ऐप रेडिजाइन के आगामी चरणों के साथ आगे बढ़ना शामिल है।",
+    "actionItems": "No action items found in the meeting.",
+    "keyDecisions": "No key decisions recorded in the meeting.",
+    "questions": "No unresolved questions found.",
+    "transcript": "P\u0000r\u0000o\u0000j\u0000e\u0000c\u0000t\u0000 \u0000A\u0000p\u0000o\u0000l\u0000l\u0000o\u0000 \u0000s\u0000p\u0000r\u0000i\u0000n\u0000t\u0000 \u0000r\u0000e\u0000v\u0000i\u0000e\u0000w\u0000:\u0000 \u0000M\u0000o\u0000b\u0000i\u0000l\u0000e\u0000 \u0000a\u0000p\u0000p\u0000 \u0000r\u0000e\u0000d\u0000e\u0000s\u0000i\u0000g\u0000n\u0000 \u0000r\u0000e\u0000a\u0000c\u0000h\u0000e\u0000d\u0000 \u0000m\u0000i\u0000l\u0000e\u0000s\u0000t\u0000o\u0000n\u0000e\u0000 \u00003\u0000 \u0000w\u0000i\u0000t\u0000h\u0000 \u00009\u00008\u0000%\u0000 \u0000p\u0000a\u0000s\u0000s\u0000 \u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000i\u0000n\u0000t\u0000e\u0000g\u0000r\u0000a\u0000t\u0000i\u0000o\u0000n\u0000 \u0000t\u0000e\u0000s\u0000t\u0000s\u0000.\u0000\n\u0000\n\u0000",
+    "id": "978eb7b5-425b-429b-b56c-55f751a4a599",
+    "createdAt": "2026-11-07T17:15:46.587Z"
+  },
+  {
+    "title": "test_doc2.txt",
+    "sourceType": "document",
+    "filename": "test_doc2.txt",
+    "charCount": 194,
+    "provider": "mistral",
+    "model": "ministral-8b-latest",
+    "englishSummary": "**Executive Overview:**\nThe AI infrastructure migration was successfully completed, delivering a **300% performance increase** as planned. The project met its core objectives, enabling scalable and efficient AI operations while minimizing downtime.\n\n**Primary Discussion Points:**\n- **Migration Completion:** All systems transitioned without major disruptions.\n- **Performance Metrics:** Achieved **300% improvement** in processing speed and efficiency.\n- **Stakeholder Validation:** Confirmed alignment with strategic goals and operational readiness.\n\n**Conclusions & Next Steps:**\n- **Next Steps:** Begin **post-migration optimization** and **user training** to maximize ROI.\n- **Follow-Up:** Schedule a **30-day performance review** to assess long-term stability.",
+    "hindiSummary": "**अध्यक्षीय अवलोकन:**\nएआई इन्फ्रास्ट्रक्चर का माइग्रेशन सफलतापूर्वक पूरा हो गया, जिसने **300% प्रदर्शन वृद्धि** (जैसा योजना के अनुसार था) प्राप्त की। इस परियोजना ने अपने मुख्य उद्देश्यों को पूरा किया, जिससे स्केलेबल और कुशल एआई ऑपरेशंस संभव हुए और डाउनटाइम को न्यूनतम रखा गया।\n\n---\n\n**मुख्य चर्चा के बिंदु:**\n- **माइग्रेशन की पूर्णता:** सभी सिस्टम बिना किसी प्रमुख व्यवधान के ट्रांज़िशन हो गए।\n- **प्रदर्शन मापदंड:** प्रोसेसिंग स्पीड और दक्षता में **300% सुधार** हासिल किया गया।\n- **स्टेकहोल्डर की पुष्टि:** रणनीतिक लक्ष्यों और ऑपरेशनल तैयारियों के साथ संरेखण की पुष्टि की गई।\n\n---\n\n**निष्कर्ष एवं अगले कदम:**\n- **अगले कदम:** **माइग्रेशन के बाद के अनुकूलन** और **उपयोगकर्ता प्रशिक्षण** शुरू करने से **रॉयल्टी (ROI)** को अधिकतम करने में मदद मिलेगी।\n- **अगली क्रिया:** **30-दिवसीय प्रदर्शन समीक्षा** की योजना बनाएं ताकि लंबे समय में स्थिरता का मूल्यांकन किया जा सके।",
+    "actionItems": "No action items found in the meeting.",
+    "keyDecisions": "No key decisions recorded in the meeting.\n\n*(The provided text is an executive briefing summary rather than a transcript of an actual meeting discussion. It lacks details on decisions, agreements, or consensus reached during a deliberative process.)*",
+    "questions": "No unresolved questions found.",
+    "transcript": "E\u0000x\u0000e\u0000c\u0000u\u0000t\u0000i\u0000v\u0000e\u0000 \u0000b\u0000r\u0000i\u0000e\u0000f\u0000i\u0000n\u0000g\u0000:\u0000 \u0000T\u0000h\u0000e\u0000 \u0000A\u0000I\u0000 \u0000i\u0000n\u0000f\u0000r\u0000a\u0000s\u0000t\u0000r\u0000u\u0000c\u0000t\u0000u\u0000r\u0000e\u0000 \u0000m\u0000i\u0000g\u0000r\u0000a\u0000t\u0000i\u0000o\u0000n\u0000 \u0000i\u0000s\u0000 \u0000c\u0000o\u0000m\u0000p\u0000l\u0000e\u0000t\u0000e\u0000.\u0000 \u0000P\u0000e\u0000r\u0000f\u0000o\u0000r\u0000m\u0000a\u0000n\u0000c\u0000e\u0000 \u0000i\u0000n\u0000c\u0000r\u0000e\u0000a\u0000s\u0000e\u0000d\u0000 \u0000b\u0000y\u0000 \u00003\u00000\u00000\u0000%\u0000.\u0000\n\u0000\n\u0000",
+    "id": "47a621b0-7b89-4b42-8669-a5fc5914a20a",
+    "createdAt": "2026-11-07T17:15:06.476Z"
+  },
+  {
     "title": "test_doc.txt",
     "sourceType": "document",
     "filename": "test_doc.txt",

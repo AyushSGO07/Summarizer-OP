@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Ensure environment variables are loaded
 load_dotenv()
 
-_DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+_DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 _DEFAULT_MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "ministral-8b-latest")
 
 def get_llm(
@@ -71,7 +71,8 @@ def get_llm(
                 mistral_api_key=mistral_key,
                 temperature=temperature,
                 streaming=streaming,
-                timeout=30
+                timeout=10,
+                max_retries=1
             )
             return gemini_chat.with_fallbacks([fallback_chat])
         return gemini_chat
@@ -96,7 +97,8 @@ def get_llm(
             mistral_api_key=mistral_key,
             temperature=temperature,
             streaming=streaming,
-            timeout=30
+            timeout=10,
+            max_retries=1
         )
         if gemini_key:
             from langchain_google_genai import ChatGoogleGenerativeAI
