@@ -1,11 +1,11 @@
-# ⚡ SUMMARIZER OP — Full-Stack AI SaaS Workspace
+# SUMMARIZER OP — Full-Stack AI SaaS Workspace
 
 > **Your knowledge, simplified.**  
 > A full-stack, enterprise-grade AI summarization and document intelligence application built with **React**, **TypeScript**, **Node.js/Express**, **Python FastAPI**, **Mistral AI**, **LangChain (LCEL)**, and **ChromaDB**.
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```text
                                ┌─────────────────────────────────────────┐
@@ -36,44 +36,44 @@
 
 ---
 
-## 🌟 Application Modules & Pages
+## Application Modules & Pages
 
-### 1. 🏠 Dashboard (`/`)
+### 1. Dashboard (`/`)
 - Welcome Hero: *"Your knowledge, simplified."*
 - Real-time application metrics (Total Summaries, Active LLM, Indexed Chunks, Target Document).
 - Three interactive feature cards for direct routing to Video, Document, and RAG chat.
 - Live recent summaries feed with 1-click detail review.
 
-### 2. 🎬 Video Summarizer (`/video`)
+### 2. Video Summarizer (`/video`)
 - Direct YouTube URL ingestion and genuine video metadata preview (thumbnail, channel, duration).
 - Multi-stage pipeline: Fast captions or Whisper audio chunking $\rightarrow$ Executive summary $\rightarrow$ Hindi translation $\rightarrow$ Action items.
 - Dual-tab bilingual display with Markdown copy and file export.
 - 1-click **"Chat with this in RAG"** bridge.
 
-### 3. 📄 Document Summarizer (`/document`)
+### 3. Document Summarizer (`/document`)
 - Drag-and-drop file upload supporting **PDF, DOCX, TXT, MD, CSV, JSON, and media files**.
 - Extracts structured action items, major decisions, and questions.
 - Generates natural English summaries and fluent Hindi translations.
 
-### 4. 💬 Ask Your Documents — Conversational RAG (`/rag`)
+### 4. Ask Your Documents — Conversational RAG (`/rag`)
 - Conversational interface grounded strictly in document contents using **ChromaDB** and **HuggingFace `all-MiniLM-L6-v2`** embeddings.
 - Inspect exact retrieved chunk segments with chunk indices for zero hallucination.
 - Dynamic clickable suggested follow-up questions.
 - Session conversation memory and clear-chat control.
 
-### 5. 🕒 Summary History (`/history`)
+### 5. Summary History (`/history`)
 - File-persisted archive (`backend/data/history.json`) across application restarts.
 - Search by keyword or filter by source type (`video` / `document`).
 - Full modal preview, copy, deletion, and bulk JSON export.
 
-### 6. ⚙️ Settings (`/settings`)
+### 6. Settings (`/settings`)
 - Toggle primary AI provider between **Mistral AI** (`ministral-8b-latest`, `codestral-latest`) and **Google Gemini** fallback.
 - Configure RAG top-K retrieved chunk thresholds (1 to 8).
 - Real-time credentials and system health status.
 
 ---
 
-## 🎨 Brand Design System
+## Brand Design System
 
 | Element | Specification |
 |:---|:---|
@@ -87,7 +87,7 @@
 
 ---
 
-## 📁 Project Directory Structure
+## Project Directory Structure
 
 ```text
 D:\AI_Agent\
@@ -137,7 +137,7 @@ D:\AI_Agent\
 
 ---
 
-## 🚀 How to Run the Application
+## How to Run the Application
 
 ### Option A: Unified One-Command Runner (Recommended)
 
