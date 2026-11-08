@@ -9,19 +9,23 @@ const fs_1 = __importDefault(require("fs"));
 const form_data_1 = __importDefault(require("form-data"));
 const config_1 = require("../config");
 const isVercelEnv = Boolean(process.env.VERCEL || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME);
-// Check if a dedicated external AI microservice URL is explicitly provided (not localhost)
-const hasExternalMicroservice = Boolean(process.env.AI_SERVICE_URL &&
-    !process.env.AI_SERVICE_URL.includes("127.0.0.1") &&
-    !process.env.AI_SERVICE_URL.includes("localhost"));
-const api = axios_1.default.create({
-    timeout: 5000 // Fast 5s timeout so serverless lambdas never hang waiting for unreachable endpoints
-});
-api.interceptors.request.use((reqConfig) => {
+// Dynamically check at runtime if AI microservice is bound or available
+function hasAiMicroservice() {
+    const url = process.env.AI_SERVICE_URL || config_1.config.aiServiceUrl;
+    return Boolean(url && url.trim());
+}
+function getAiServiceBaseUrl() {
     let rawBase = (process.env.AI_SERVICE_URL || config_1.config.aiServiceUrl || "http://127.0.0.1:8000").trim().replace(/\/+$/, "");
     if (!rawBase.startsWith("http://") && !rawBase.startsWith("https://")) {
         rawBase = `https://${rawBase}`;
     }
-    reqConfig.baseURL = rawBase;
+    return rawBase;
+}
+const api = axios_1.default.create({
+    timeout: 5000 // Fast 5s timeout so serverless lambdas never hang waiting for unreachable endpoints
+});
+api.interceptors.request.use((reqConfig) => {
+    reqConfig.baseURL = getAiServiceBaseUrl();
     return reqConfig;
 });
 function buildHeaders(extraHeaders = {}) {
@@ -116,7 +120,7 @@ async function callLlmDirect(prompt, systemPrompt, preferredProvider = "mistral"
 let directRagIndexedDocs = [];
 exports.aiService = {
     async getHealth() {
-        if (hasExternalMicroservice || (!isVercelEnv && config_1.config.aiServiceUrl)) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.get("/health", { headers: buildHeaders(), timeout: 2000 });
                 return res.data;
@@ -137,7 +141,7 @@ exports.aiService = {
     async getVideoMetadata(url) {
         const videoIdMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/);
         const videoId = videoIdMatch ? videoIdMatch[1] : "video";
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/video-metadata", { url }, { timeout: 3000 });
                 if (res.data?.title)
@@ -167,7 +171,7 @@ exports.aiService = {
         }
     },
     async ingestUrl(url) {
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/ingest-url", { url }, { timeout: 5000 });
                 if (res.data?.text)
@@ -228,7 +232,7 @@ exports.aiService = {
         };
     },
     async ingestFile(filePath, originalName) {
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const fileBuffer = fs_1.default.readFileSync(filePath);
                 const form = new form_data_1.default();
@@ -283,7 +287,7 @@ exports.aiService = {
     async summarize(text, provider, model, length) {
         config_1.aiConfig.assertConfigured();
         const effectiveProvider = config_1.aiConfig.getEffectiveProvider(provider);
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/summarize", { text, provider: effectiveProvider, model, length: length || "medium" }, { headers: buildHeaders(), timeout: 5000 });
                 if (res.data?.summary)
@@ -311,7 +315,7 @@ exports.aiService = {
     async translate(text, provider, targetLang = "hindi") {
         config_1.aiConfig.assertConfigured();
         const effectiveProvider = config_1.aiConfig.getEffectiveProvider(provider);
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/translate", { text, provider: effectiveProvider, target_lang: targetLang }, { headers: buildHeaders(), timeout: 5000 });
                 if (res.data?.translation)
@@ -334,7 +338,7 @@ exports.aiService = {
     async extractInsights(text, provider) {
         config_1.aiConfig.assertConfigured();
         const effectiveProvider = config_1.aiConfig.getEffectiveProvider(provider);
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/extract-insights", { text, provider: effectiveProvider }, { headers: buildHeaders(), timeout: 5000 });
                 if (res.data?.action_items)
@@ -359,7 +363,7 @@ exports.aiService = {
         };
     },
     async ragIndexText(text, docName) {
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/rag/index-text", { text, doc_name: docName }, { timeout: 5000 });
                 if (res.data?.success)
@@ -383,7 +387,7 @@ exports.aiService = {
         };
     },
     async ragIndexFile(filePath, originalName) {
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const fileBuffer = fs_1.default.readFileSync(filePath);
                 const form = new form_data_1.default();
@@ -407,7 +411,7 @@ exports.aiService = {
     async ragQuery(query, chatHistory = [], k = 4, provider) {
         config_1.aiConfig.assertConfigured();
         const effectiveProvider = config_1.aiConfig.getEffectiveProvider(provider);
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.post("/ai/rag/query", { query, chat_history: chatHistory, k, provider: effectiveProvider }, { headers: buildHeaders(), timeout: 5000 });
                 if (res.data?.answer)
@@ -433,7 +437,7 @@ exports.aiService = {
         };
     },
     async getRagStatus() {
-        if (hasExternalMicroservice) {
+        if (hasAiMicroservice()) {
             try {
                 const res = await api.get("/ai/rag/status", { timeout: 2000 });
                 if (res.data)
