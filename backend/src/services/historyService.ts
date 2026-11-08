@@ -22,18 +22,24 @@ export interface SummaryRecord {
   createdAt: string;
 }
 
+let inMemoryHistory: SummaryRecord[] = [];
+
 function getHistoryFilePath(): string {
   return path.join(config.dataDir, "history.json");
 }
 
 function ensureDataFile() {
-  const dir = config.dataDir;
-  const filePath = getHistoryFilePath();
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify([], null, 2), "utf-8");
+  try {
+    const dir = config.dataDir;
+    const filePath = getHistoryFilePath();
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify([], null, 2), "utf-8");
+    }
+  } catch {
+    // In serverless readonly environments, fallback gracefully to in-memory state
   }
 }
 
@@ -42,9 +48,13 @@ export const historyService = {
     ensureDataFile();
     try {
       const data = fs.readFileSync(getHistoryFilePath(), "utf-8");
-      return JSON.parse(data) || [];
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        inMemoryHistory = parsed;
+      }
+      return inMemoryHistory;
     } catch {
-      return [];
+      return inMemoryHistory;
     }
   },
 
@@ -54,7 +64,6 @@ export const historyService = {
   },
 
   create(record: Omit<SummaryRecord, "id" | "createdAt">): SummaryRecord {
-    ensureDataFile();
     const list = this.getAll();
     const newRecord: SummaryRecord = {
       ...record,
@@ -62,24 +71,37 @@ export const historyService = {
       createdAt: new Date().toISOString()
     };
     list.unshift(newRecord);
-    fs.writeFileSync(getHistoryFilePath(), JSON.stringify(list, null, 2), "utf-8");
+    inMemoryHistory = list;
+
+    try {
+      ensureDataFile();
+      fs.writeFileSync(getHistoryFilePath(), JSON.stringify(list, null, 2), "utf-8");
+    } catch {
+      // Retained in inMemoryHistory
+    }
     return newRecord;
   },
 
   delete(id: string): boolean {
-    ensureDataFile();
     const list = this.getAll();
     const filtered = list.filter((item) => item.id !== id);
     if (filtered.length !== list.length) {
-      fs.writeFileSync(getHistoryFilePath(), JSON.stringify(filtered, null, 2), "utf-8");
+      inMemoryHistory = filtered;
+      try {
+        ensureDataFile();
+        fs.writeFileSync(getHistoryFilePath(), JSON.stringify(filtered, null, 2), "utf-8");
+      } catch {}
       return true;
     }
     return false;
   },
 
   clear(): void {
-    ensureDataFile();
-    fs.writeFileSync(getHistoryFilePath(), JSON.stringify([], null, 2), "utf-8");
+    inMemoryHistory = [];
+    try {
+      ensureDataFile();
+      fs.writeFileSync(getHistoryFilePath(), JSON.stringify([], null, 2), "utf-8");
+    } catch {}
   },
 
   getStats() {

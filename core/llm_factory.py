@@ -48,7 +48,7 @@ def get_active_provider_info(preferred_provider: Optional[str] = None) -> Dict[s
         "gemini_configured": gemini_ready,
         "has_any_configured": mistral_ready or gemini_ready,
         "default_mistral_model": get_env_key("MISTRAL_MODEL") or "ministral-8b-latest",
-        "default_gemini_model": get_env_key("GEMINI_MODEL") or "gemini-2.0-flash"
+        "default_gemini_model": get_env_key("GEMINI_MODEL") or "gemini-3.5-flash-lite"
     }
 
 def get_llm(
@@ -76,7 +76,7 @@ def get_llm(
     ).strip()
 
     default_mistral_model = get_env_key("MISTRAL_MODEL") or "ministral-8b-latest"
-    default_gemini_model = get_env_key("GEMINI_MODEL") or "gemini-2.0-flash"
+    default_gemini_model = get_env_key("GEMINI_MODEL") or "gemini-3.5-flash-lite"
 
     # Determine default provider - prioritize Mistral for Mistral AI Summarizer
     if provider is None:

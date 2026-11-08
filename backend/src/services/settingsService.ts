@@ -22,14 +22,24 @@ const defaultSettings: AppSettings = {
   theme: "dark"
 };
 
-const settingsFilePath = path.join(config.dataDir, "settings.json");
+let inMemorySettings: AppSettings = { ...defaultSettings };
+
+function getSettingsFilePath(): string {
+  return path.join(config.dataDir, "settings.json");
+}
 
 function ensureSettingsFile() {
-  if (!fs.existsSync(config.dataDir)) {
-    fs.mkdirSync(config.dataDir, { recursive: true });
-  }
-  if (!fs.existsSync(settingsFilePath)) {
-    fs.writeFileSync(settingsFilePath, JSON.stringify(defaultSettings, null, 2), "utf-8");
+  try {
+    const dir = config.dataDir;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const filePath = getSettingsFilePath();
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify(defaultSettings, null, 2), "utf-8");
+    }
+  } catch (err) {
+    // In serverless read-only filesystems, fallback gracefully to in-memory state
   }
 }
 
@@ -37,18 +47,25 @@ export const settingsService = {
   getSettings(): AppSettings {
     ensureSettingsFile();
     try {
-      const data = fs.readFileSync(settingsFilePath, "utf-8");
-      return { ...defaultSettings, ...JSON.parse(data) };
+      const data = fs.readFileSync(getSettingsFilePath(), "utf-8");
+      inMemorySettings = { ...defaultSettings, ...JSON.parse(data) };
+      return inMemorySettings;
     } catch {
-      return defaultSettings;
+      return inMemorySettings;
     }
   },
 
   updateSettings(partial: Partial<AppSettings>): AppSettings {
-    ensureSettingsFile();
     const current = this.getSettings();
     const updated: AppSettings = { ...current, ...partial };
-    fs.writeFileSync(settingsFilePath, JSON.stringify(updated, null, 2), "utf-8");
+    inMemorySettings = updated;
+
+    try {
+      ensureSettingsFile();
+      fs.writeFileSync(getSettingsFilePath(), JSON.stringify(updated, null, 2), "utf-8");
+    } catch {
+      // In serverless readonly environments, in-memory state retains the updated settings
+    }
     return updated;
   }
 };

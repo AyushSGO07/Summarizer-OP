@@ -2,11 +2,18 @@ import path from "path";
 import os from "os";
 import dotenv from "dotenv";
 
-// Load root or local .env
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
-dotenv.config();
+// Safely load local .env in development without relying on CommonJS __dirname
+try {
+  const cwd = process.cwd();
+  dotenv.config({ path: path.resolve(cwd, ".env") });
+  dotenv.config({ path: path.resolve(cwd, "../.env") });
+  dotenv.config({ path: path.resolve(cwd, "../../.env") });
+  dotenv.config();
+} catch {
+  // In serverless deployment, environment variables are injected directly by the platform
+}
 
-const isVercel = Boolean(process.env.VERCEL);
+const isVercel = Boolean(process.env.VERCEL || process.env.NOW_REGION || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 /**
  * Case-insensitively resolves environment variables with optional aliases.
@@ -80,6 +87,7 @@ export const aiConfig = {
 };
 
 export const config = {
+  isVercel,
   port: parseInt(process.env.PORT || "5000", 10),
   get aiServiceUrl(): string {
     return (process.env.AI_SERVICE_URL || "http://127.0.0.1:8000").trim();
@@ -87,12 +95,12 @@ export const config = {
   get dataDir(): string {
     return isVercel
       ? path.join(os.tmpdir(), "summarizer_op_data")
-      : path.resolve(__dirname, "../../data");
+      : path.resolve(process.cwd(), "backend/data");
   },
   get uploadDir(): string {
     return isVercel
       ? path.join(os.tmpdir(), "summarizer_op_uploads")
-      : path.resolve(__dirname, "../../uploads");
+      : path.resolve(process.cwd(), "backend/uploads");
   },
   corsOrigins: ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
 };
