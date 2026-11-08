@@ -76,10 +76,9 @@ app.use("/", routes);
 // Centralized Error Handling
 app.use(errorHandler);
 
-// Start Server listening on assigned PORT (ensures server process stays alive on Vercel)
-const PORT = process.env.PORT || config.port || 5000;
-
-if (process.env.NODE_ENV !== "test") {
+// Start Server when running locally (not in serverless or test)
+if (!process.env.VERCEL && !process.env.NOW_REGION && process.env.NODE_ENV !== "test") {
+  const PORT = process.env.PORT || config.port || 5000;
   app.listen(PORT, () => {
     console.log(`=================================================`);
     console.log(`🚀 SUMMARIZER OP Backend listening on port ${PORT}`);
@@ -92,5 +91,4 @@ if (process.env.NODE_ENV !== "test") {
 (app as any).default = app;
 (app as any).app = app;
 
-export { app };
-export default app;
+export = app;
