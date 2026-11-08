@@ -90,5 +90,4 @@ if (!process.env.VERCEL && !process.env.NOW_REGION && process.env.NODE_ENV !== "
 (app as any).default = app;
 (app as any).app = app;
 
-export { app };
-export default app;
+export = app;

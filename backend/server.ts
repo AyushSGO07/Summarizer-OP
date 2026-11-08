@@ -1,3 +1,2 @@
 import app from "./src/server";
-export { app };
-export default app;
+export = app;

@@ -20,8 +20,15 @@ const isVercel = Boolean(process.env.VERCEL || process.env.NOW_REGION || process
  */
 export function getEnvKey(...names: string[]): string | undefined {
   for (const name of names) {
+    // 1. Direct property access
+    const direct = process.env[name] || process.env[name.toUpperCase()] || process.env[name.toLowerCase()];
+    if (direct && typeof direct === "string" && direct.trim()) {
+      return direct.trim();
+    }
+    // 2. Case-insensitive search across process.env keys
+    const lowerName = name.toLowerCase();
     for (const [k, v] of Object.entries(process.env)) {
-      if (k.toLowerCase() === name.toLowerCase() && v && v.trim()) {
+      if (k.toLowerCase() === lowerName && v && typeof v === "string" && v.trim()) {
         return v.trim();
       }
     }
@@ -36,11 +43,20 @@ export function getEnvKey(...names: string[]): string | undefined {
  */
 export const aiConfig = {
   get mistralApiKey(): string | undefined {
-    return getEnvKey("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY");
+    return (
+      (process.env.MISTRAL_API_KEY && process.env.MISTRAL_API_KEY.trim()) ||
+      (process.env.MISTRALAI_API_KEY && process.env.MISTRALAI_API_KEY.trim()) ||
+      getEnvKey("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY")
+    );
   },
 
   get geminiApiKey(): string | undefined {
-    return getEnvKey("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY");
+    return (
+      (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) ||
+      (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.trim()) ||
+      (process.env.GOOGLE_GENAI_API_KEY && process.env.GOOGLE_GENAI_API_KEY.trim()) ||
+      getEnvKey("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY")
+    );
   },
 
   get isMistralConfigured(): boolean {
