@@ -75,7 +75,10 @@ export const SettingsPage: React.FC = () => {
   );
   const isBackendHealthy = Boolean(
     systemHealth?.nodeBackend === "healthy" &&
-      (systemHealth?.aiServiceConnected ?? systemHealth?.aiService?.status === "healthy")
+      (systemHealth?.aiServiceConnected ||
+        systemHealth?.engine?.connectionStatus === "connected" ||
+        systemHealth?.aiService?.status === "healthy" ||
+        systemHealth?.aiService?.status === "operational")
   );
 
   const activeModelName = provider === "mistral" ? mistralModel : geminiModel;

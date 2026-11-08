@@ -143,7 +143,7 @@ export const aiService = {
     }
 
     return {
-      status: "operational",
+      status: "healthy",
       service: "SUMMARIZER OP Backend (Direct LLM Engine)",
       mistral_available: aiConfig.isMistralConfigured,
       gemini_available: aiConfig.isGeminiConfigured,
@@ -197,28 +197,48 @@ export const aiService = {
     const meta = await this.getVideoMetadata(url);
     const videoId = meta.video_id;
 
-    // Direct transcript extraction from YouTube captions
+    // Direct transcript & description extraction from YouTube
     let transcriptText = "";
+    let videoDescription = "";
+
     if (videoId) {
       try {
         const pageRes = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
           headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
           timeout: 4000
         });
+
+        // Extract description from YouTube page
+        const descMatch = pageRes.data.match(/"shortDescription":"(.*?)"/);
+        if (descMatch) {
+          try {
+            videoDescription = JSON.parse(`"${descMatch[1]}"`);
+          } catch {
+            videoDescription = descMatch[1].replace(/\\n/g, "\n");
+          }
+        }
+
+        // Try extracting timed caption tracks
         const captionMatch = pageRes.data.match(/"captionTracks":\s*(\[[^\]]+\])/);
         if (captionMatch) {
           const captionTracks = JSON.parse(captionMatch[1]);
           const baseUrl = captionTracks[0]?.baseUrl;
           if (baseUrl) {
             const xmlRes = await axios.get(baseUrl, { timeout: 4000 });
-            transcriptText = xmlRes.data.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
+            if (xmlRes.data && xmlRes.data.length > 50) {
+              transcriptText = xmlRes.data.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
+            }
           }
         }
       } catch {}
     }
 
     if (!transcriptText) {
-      transcriptText = `Title: ${meta.title}\nChannel: ${meta.channel}\nYouTube URL: ${url}\nContent Overview: High-level overview and discussion presented in this video presentation.`;
+      if (videoDescription && videoDescription.trim().length > 20) {
+        transcriptText = `Title: ${meta.title}\nChannel: ${meta.channel}\nYouTube URL: ${url}\n\nVideo Overview & Description:\n${videoDescription}`;
+      } else {
+        transcriptText = `Title: ${meta.title}\nChannel: ${meta.channel}\nYouTube URL: ${url}\n\nContent Overview:\nKey topics, presentations, and discussions covered in this video presentation.`;
+      }
     }
 
     return {

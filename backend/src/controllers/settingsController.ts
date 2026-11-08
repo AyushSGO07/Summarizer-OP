@@ -56,13 +56,18 @@ export const settingsController = {
       // Check whether the selected provider is initialized correctly with credentials
       const selectedProviderConfigured = settings.provider === "mistral" ? mistralConfigured : geminiConfigured;
       const isInitialized = selectedProviderConfigured || (mistralConfigured || geminiConfigured);
+      const isAiConnected = Boolean(
+        aiHealth?.status === "healthy" ||
+        aiHealth?.status === "operational" ||
+        aiConfig.hasAnyProvider
+      );
 
       res.json({
         success: true,
         data: {
           nodeBackend: "healthy",
           backendStatus: "healthy",
-          aiServiceConnected: Boolean(aiHealth?.status === "healthy"),
+          aiServiceConnected: isAiConnected,
           engine: {
             activeProvider: settings.provider,
             effectiveProvider,
@@ -71,7 +76,7 @@ export const settingsController = {
             mistralConfigured,
             geminiConfigured,
             isInitialized,
-            connectionStatus: aiHealth?.status === "healthy" ? "connected" : "disconnected"
+            connectionStatus: isAiConnected ? "connected" : "disconnected"
           },
           aiService: {
             status: aiHealth?.status || "disconnected",
