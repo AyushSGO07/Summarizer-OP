@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const historyController_1 = require("../controllers/historyController");
+const router = (0, express_1.Router)();
+router.get("/", historyController_1.historyController.getAll);
+router.get("/stats", historyController_1.historyController.getStats);
+router.get("/:id", historyController_1.historyController.getById);
+router.delete("/clear", historyController_1.historyController.clear);
+router.delete("/:id", historyController_1.historyController.delete);
+exports.default = router;

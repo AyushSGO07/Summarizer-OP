@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const ragController_1 = require("../controllers/ragController");
+const upload_1 = require("../middleware/upload");
+const router = (0, express_1.Router)();
+router.post("/index-file", upload_1.upload.single("file"), ragController_1.ragController.indexFile);
+router.post("/index-text", ragController_1.ragController.indexText);
+router.post("/query", ragController_1.ragController.query);
+router.get("/status", ragController_1.ragController.getStatus);
+exports.default = router;

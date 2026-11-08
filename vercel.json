@@ -7,8 +7,8 @@
     },
     "backend": {
       "root": "backend",
-      "framework": "express",
-      "entrypoint": "src/server.ts",
+      "buildCommand": "npm run build",
+      "entrypoint": "dist/server.js",
       "functions": {
         "**": {
           "maxDuration": 60
