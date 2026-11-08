@@ -76,11 +76,13 @@ app.use("/", routes);
 // Centralized Error Handling
 app.use(errorHandler);
 
-// Start Server when running locally (not in serverless or test)
-if (!process.env.VERCEL && !process.env.NOW_REGION && process.env.NODE_ENV !== "test") {
-  app.listen(config.port, () => {
+// Start Server listening on assigned PORT (ensures server process stays alive on Vercel)
+const PORT = process.env.PORT || config.port || 5000;
+
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
     console.log(`=================================================`);
-    console.log(`🚀 SUMMARIZER OP Backend running on port ${config.port}`);
+    console.log(`🚀 SUMMARIZER OP Backend listening on port ${PORT}`);
     console.log(`🔗 Connected AI Microservice at: ${config.aiServiceUrl}`);
     console.log(`=================================================`);
   });
@@ -90,4 +92,5 @@ if (!process.env.VERCEL && !process.env.NOW_REGION && process.env.NODE_ENV !== "
 (app as any).default = app;
 (app as any).app = app;
 
-export = app;
+export { app };
+export default app;
