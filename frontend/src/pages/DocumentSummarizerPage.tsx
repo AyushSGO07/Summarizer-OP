@@ -127,7 +127,7 @@ export const DocumentSummarizerPage: React.FC = () => {
       }
 
       if (msg.includes("A server error has occurred")) {
-        msg = "Server Error (500): The AI service encountered an issue. Please verify MISTRAL_API_KEY or GEMINI_API_KEY is configured in your Vercel Project Settings (Settings -> Environment Variables).";
+        msg = "Server Error (500): The backend service encountered an issue. Please check your Vercel deployment functions log.";
       }
 
       setErrorMessage(msg);
