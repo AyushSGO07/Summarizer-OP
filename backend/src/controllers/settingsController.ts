@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { settingsService } from "../services/settingsService";
-import { aiService, getEnvKey } from "../services/aiService";
+import { aiService } from "../services/aiService";
+import { aiConfig } from "../config";
 
 export const settingsController = {
   getSettings(_req: Request, res: Response, next: NextFunction) {
@@ -14,7 +15,27 @@ export const settingsController = {
 
   updateSettings(req: Request, res: Response, next: NextFunction) {
     try {
-      const updated = settingsService.updateSettings(req.body);
+      // Whitelist only safe non-credential settings
+      const {
+        provider,
+        mistralModel,
+        geminiModel,
+        ragTopK,
+        summaryLength,
+        targetLanguage,
+        theme
+      } = req.body;
+
+      const safePartial: Record<string, any> = {};
+      if (provider !== undefined) safePartial.provider = provider;
+      if (mistralModel !== undefined) safePartial.mistralModel = mistralModel;
+      if (geminiModel !== undefined) safePartial.geminiModel = geminiModel;
+      if (ragTopK !== undefined) safePartial.ragTopK = ragTopK;
+      if (summaryLength !== undefined) safePartial.summaryLength = summaryLength;
+      if (targetLanguage !== undefined) safePartial.targetLanguage = targetLanguage;
+      if (theme !== undefined) safePartial.theme = theme;
+
+      const updated = settingsService.updateSettings(safePartial);
       res.json({ success: true, data: updated, message: "Settings saved successfully" });
     } catch (err) {
       next(err);
@@ -26,17 +47,41 @@ export const settingsController = {
       const aiHealth = await aiService.getHealth().catch(() => ({}));
       const settings = settingsService.getSettings();
 
-      const nodeMistral = Boolean(getEnvKey("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY"));
-      const nodeGemini = Boolean(getEnvKey("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY"));
+      const mistralConfigured = Boolean(aiConfig.isMistralConfigured || aiHealth?.mistral_available);
+      const geminiConfigured = Boolean(aiConfig.isGeminiConfigured || aiHealth?.gemini_available);
+
+      const effectiveProvider = aiConfig.getEffectiveProvider(settings.provider);
+      const activeModel = effectiveProvider === "mistral" ? settings.mistralModel : settings.geminiModel;
+
+      // Check whether the selected provider is initialized correctly with credentials
+      const selectedProviderConfigured = settings.provider === "mistral" ? mistralConfigured : geminiConfigured;
+      const isInitialized = selectedProviderConfigured || (mistralConfigured || geminiConfigured);
 
       res.json({
         success: true,
         data: {
           nodeBackend: "healthy",
+          backendStatus: "healthy",
+          aiServiceConnected: Boolean(aiHealth?.status === "healthy"),
+          engine: {
+            activeProvider: settings.provider,
+            effectiveProvider,
+            activeModel,
+            isConfigured: mistralConfigured || geminiConfigured,
+            mistralConfigured,
+            geminiConfigured,
+            isInitialized,
+            connectionStatus: aiHealth?.status === "healthy" ? "connected" : "disconnected"
+          },
           aiService: {
-            ...aiHealth,
-            mistral_available: Boolean(aiHealth?.mistral_available || nodeMistral),
-            gemini_available: Boolean(aiHealth?.gemini_available || nodeGemini)
+            status: aiHealth?.status || "disconnected",
+            service: aiHealth?.service || "SUMMARIZER OP — AI Service",
+            mistral_available: mistralConfigured,
+            gemini_available: geminiConfigured,
+            ffmpeg_available: Boolean(aiHealth?.ffmpeg_available),
+            default_mistral_model: aiHealth?.default_mistral_model || settings.mistralModel,
+            chroma_dir_exists: Boolean(aiHealth?.chroma_dir_exists),
+            active_document: aiHealth?.active_document || null
           },
           currentSettings: settings
         }

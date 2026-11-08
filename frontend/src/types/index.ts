@@ -59,8 +59,22 @@ export interface AppSettings {
   theme: "dark" | "system";
 }
 
+export interface EngineStatus {
+  activeProvider: "mistral" | "gemini";
+  effectiveProvider: "mistral" | "gemini";
+  activeModel: string;
+  isConfigured: boolean;
+  mistralConfigured: boolean;
+  geminiConfigured: boolean;
+  isInitialized: boolean;
+  connectionStatus: "connected" | "disconnected";
+}
+
 export interface SystemHealth {
   nodeBackend: string;
+  backendStatus?: string;
+  aiServiceConnected?: boolean;
+  engine?: EngineStatus;
   aiService: {
     status: string;
     service: string;

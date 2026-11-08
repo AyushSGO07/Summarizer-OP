@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import { aiService } from "../services/aiService";
 import { settingsService } from "../services/settingsService";
+import { aiConfig } from "../config";
 
 export const ragController = {
   async indexFile(req: Request, res: Response, next: NextFunction) {
@@ -58,16 +59,16 @@ export const ragController = {
         return res.status(400).json({ success: false, error: "Query is required." });
       }
 
+      // Assert server-side API keys exist before running RAG inference
+      aiConfig.assertConfigured();
+
       const settings = settingsService.getSettings();
-      const provider = reqProvider || settings.provider;
+      const preferredProvider = reqProvider || settings.provider;
+      const provider = aiConfig.getEffectiveProvider(preferredProvider);
       const k = reqK || settings.ragTopK || 4;
 
-      const mistralApiKey = (req.headers["x-mistral-api-key"] as string) || req.body.mistralApiKey;
-      const geminiApiKey = (req.headers["x-gemini-api-key"] as string) || req.body.geminiApiKey;
-      const keys = { mistralApiKey, geminiApiKey };
-
       console.log(`[RAG Controller] Querying ChromaDB with k=${k}, provider=${provider}: '${query}'`);
-      const result = await aiService.ragQuery(query, chatHistory, k, provider, keys);
+      const result = await aiService.ragQuery(query, chatHistory, k, provider);
 
       res.json({
         success: true,

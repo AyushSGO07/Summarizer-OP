@@ -1,10 +1,10 @@
 import axios from "axios";
 import fs from "fs";
 import FormData from "form-data";
-import { config } from "../config";
+import { config, aiConfig } from "../config";
 
 const api = axios.create({
-  timeout: 180000 // 3 minutes timeout for long video transcription
+  timeout: 180000 // 3 minutes timeout for long video transcription and AI pipelines
 });
 
 // Dynamically resolve AI_SERVICE_URL at runtime on every request to support Vercel service bindings
@@ -17,26 +17,14 @@ api.interceptors.request.use((reqConfig) => {
   return reqConfig;
 });
 
-export interface ApiKeys {
-  mistralApiKey?: string;
-  geminiApiKey?: string;
-}
-
-export function getEnvKey(...names: string[]): string | undefined {
-  for (const name of names) {
-    for (const [k, v] of Object.entries(process.env)) {
-      if (k.toLowerCase() === name.toLowerCase() && v && v.trim()) {
-        return v.trim();
-      }
-    }
-  }
-  return undefined;
-}
-
-function buildHeaders(extraHeaders: Record<string, any> = {}, keys?: ApiKeys) {
-  const headers = { ...extraHeaders };
-  const mistral = keys?.mistralApiKey || getEnvKey("MISTRAL_API_KEY", "MISTRALAI_API_KEY", "MISTRAL_KEY");
-  const gemini = keys?.geminiApiKey || getEnvKey("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY", "GEMINI_KEY");
+/**
+ * Attaches verified server-side environment variables to internal server-to-server requests.
+ * Never uses or forwards client-provided secrets.
+ */
+function buildHeaders(extraHeaders: Record<string, any> = {}) {
+  const headers: Record<string, any> = { ...extraHeaders };
+  const mistral = aiConfig.mistralApiKey;
+  const gemini = aiConfig.geminiApiKey;
 
   if (mistral) headers["x-mistral-api-key"] = mistral;
   if (gemini) headers["x-gemini-api-key"] = gemini;
@@ -78,52 +66,55 @@ export const aiService = {
     return res.data;
   },
 
-  async summarize(text: string, provider?: string, model?: string, length?: string, keys?: ApiKeys) {
+  async summarize(text: string, provider?: string, model?: string, length?: string) {
+    aiConfig.assertConfigured();
+    const effectiveProvider = aiConfig.getEffectiveProvider(provider as any);
+
     const res = await api.post(
       "/ai/summarize",
       {
         text,
-        provider,
+        provider: effectiveProvider,
         model,
-        length: length || "medium",
-        mistral_api_key: keys?.mistralApiKey,
-        gemini_api_key: keys?.geminiApiKey
+        length: length || "medium"
       },
       {
-        headers: buildHeaders({}, keys)
+        headers: buildHeaders()
       }
     );
     return res.data;
   },
 
-  async translate(text: string, provider?: string, targetLang: string = "hindi", keys?: ApiKeys) {
+  async translate(text: string, provider?: string, targetLang: string = "hindi") {
+    aiConfig.assertConfigured();
+    const effectiveProvider = aiConfig.getEffectiveProvider(provider as any);
+
     const res = await api.post(
       "/ai/translate",
       {
         text,
-        provider,
-        target_lang: targetLang,
-        mistral_api_key: keys?.mistralApiKey,
-        gemini_api_key: keys?.geminiApiKey
+        provider: effectiveProvider,
+        target_lang: targetLang
       },
       {
-        headers: buildHeaders({}, keys)
+        headers: buildHeaders()
       }
     );
     return res.data;
   },
 
-  async extractInsights(text: string, provider?: string, keys?: ApiKeys) {
+  async extractInsights(text: string, provider?: string) {
+    aiConfig.assertConfigured();
+    const effectiveProvider = aiConfig.getEffectiveProvider(provider as any);
+
     const res = await api.post(
       "/ai/extract-insights",
       {
         text,
-        provider,
-        mistral_api_key: keys?.mistralApiKey,
-        gemini_api_key: keys?.geminiApiKey
+        provider: effectiveProvider
       },
       {
-        headers: buildHeaders({}, keys)
+        headers: buildHeaders()
       }
     );
     return res.data;
@@ -156,19 +147,20 @@ export const aiService = {
     return res.data;
   },
 
-  async ragQuery(query: string, chatHistory: any[] = [], k: number = 4, provider?: string, keys?: ApiKeys) {
+  async ragQuery(query: string, chatHistory: any[] = [], k: number = 4, provider?: string) {
+    aiConfig.assertConfigured();
+    const effectiveProvider = aiConfig.getEffectiveProvider(provider as any);
+
     const res = await api.post(
       "/ai/rag/query",
       {
         query,
         chat_history: chatHistory,
         k,
-        provider,
-        mistral_api_key: keys?.mistralApiKey,
-        gemini_api_key: keys?.geminiApiKey
+        provider: effectiveProvider
       },
       {
-        headers: buildHeaders({}, keys)
+        headers: buildHeaders()
       }
     );
     return res.data;

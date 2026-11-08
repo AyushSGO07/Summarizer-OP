@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { aiService } from "../services/aiService";
 import { historyService } from "../services/historyService";
 import { settingsService } from "../services/settingsService";
+import { aiConfig } from "../config";
 
 export const videoController = {
   async getMetadata(req: Request, res: Response, next: NextFunction) {
@@ -24,13 +25,13 @@ export const videoController = {
         return res.status(400).json({ success: false, error: "URL is required" });
       }
 
-      const settings = settingsService.getSettings();
-      const provider = reqProvider || settings.provider;
-      const model = provider === "mistral" ? settings.mistralModel : settings.geminiModel;
+      // Assert server-side API keys exist before running operations
+      aiConfig.assertConfigured();
 
-      const mistralApiKey = (req.headers["x-mistral-api-key"] as string) || req.body.mistralApiKey;
-      const geminiApiKey = (req.headers["x-gemini-api-key"] as string) || req.body.geminiApiKey;
-      const keys = { mistralApiKey, geminiApiKey };
+      const settings = settingsService.getSettings();
+      const preferredProvider = reqProvider || settings.provider;
+      const provider = aiConfig.getEffectiveProvider(preferredProvider);
+      const model = provider === "mistral" ? settings.mistralModel : settings.geminiModel;
 
       // Step 1: Ingest Video (captions or audio download + Whisper)
       console.log(`[Video Controller] Ingesting video: ${url}`);
@@ -41,20 +42,20 @@ export const videoController = {
         return res.status(400).json({ success: false, error: "No transcript or audible speech found in video." });
       }
 
-      // Step 2: Generate English Executive Summary
+      // Step 2: Generate English Executive Summary using centralized server-side configuration
       console.log(`[Video Controller] Summarizing with ${provider} (${summaryLength})...`);
-      const sumRes = await aiService.summarize(transcript, provider, model, summaryLength, keys);
+      const sumRes = await aiService.summarize(transcript, provider, model, summaryLength);
       const englishSummary = sumRes.summary || "";
 
       // Step 3 & 4: In Parallel - Hindi Translation & Insights Extraction
       const translatePromise = (language === "hindi" || language === "both")
-        ? aiService.translate(englishSummary, provider, "hindi", keys).catch((e) => {
+        ? aiService.translate(englishSummary, provider, "hindi").catch((e) => {
             console.warn("[Video Controller] Hindi translation warning:", e.message);
             return { translation: "" };
           })
         : Promise.resolve({ translation: "" });
 
-      const insightsPromise = aiService.extractInsights(transcript, provider, keys).catch((e) => {
+      const insightsPromise = aiService.extractInsights(transcript, provider).catch((e) => {
         console.warn("[Video Controller] Insight extraction warning:", e.message);
         return { action_items: "", key_decisions: "", questions: "" };
       });
