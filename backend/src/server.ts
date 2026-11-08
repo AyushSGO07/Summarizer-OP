@@ -77,7 +77,7 @@ app.use("/", routes);
 app.use(errorHandler);
 
 // Start Server when running locally (not in serverless or test)
-if (!process.env.VERCEL && !process.env.NOW_REGION && process.env.NODE_ENV !== "test") {
+if (!process.env.VERCEL && !process.env.NOW_REGION && !process.env.AWS_LAMBDA_FUNCTION_NAME && process.env.NODE_ENV !== "test") {
   const PORT = process.env.PORT || config.port || 5000;
   app.listen(PORT, () => {
     console.log(`=================================================`);
@@ -91,4 +91,11 @@ if (!process.env.VERCEL && !process.env.NOW_REGION && process.env.NODE_ENV !== "
 (app as any).default = app;
 (app as any).app = app;
 
-export = app;
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = app;
+  module.exports.default = app;
+  module.exports.app = app;
+}
+
+export { app };
+export default app;

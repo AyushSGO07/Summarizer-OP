@@ -2,14 +2,15 @@ let app = null;
 let initError = null;
 
 try {
-  app = require("./dist/server.js");
+  const mod = require("./dist/server.js");
+  app = mod && mod.default ? mod.default : mod;
 } catch (err) {
   initError = {
     message: err && err.message ? err.message : String(err),
     stack: err && err.stack ? err.stack : undefined,
     name: err && err.name ? err.name : "InitError"
   };
-  console.error("[Vercel Entrypoint Init Error]:", initError);
+  console.error("[backend/server.js Init Error]:", initError);
 }
 
 const handler = (req, res) => {
@@ -28,25 +29,15 @@ const handler = (req, res) => {
     );
   }
 
-  try {
-    const callableApp = app && app.default ? app.default : app;
-    return callableApp(req, res);
-  } catch (err) {
-    res.statusCode = 500;
-    res.setHeader("Content-Type", "application/json");
-    return res.end(
-      JSON.stringify(
-        {
-          status: "RUNTIME_ERROR",
-          message: err && err.message ? err.message : String(err),
-          stack: err && err.stack ? err.stack : undefined
-        },
-        null,
-        2
-      )
-    );
-  }
+  const callableApp = app && app.default ? app.default : app;
+  return callableApp(req, res);
 };
 
+if (app) {
+  Object.setPrototypeOf(handler, app);
+  Object.assign(handler, app);
+}
+
 handler.default = handler;
+handler.app = app;
 module.exports = handler;
