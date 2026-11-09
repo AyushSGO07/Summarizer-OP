@@ -7,7 +7,7 @@
     "dev:ai": "python -m uvicorn ai_service.main:app --host 127.0.0.1 --port 8000",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "cd backend && npm run build && cd ../frontend && npm run build"
+    "build": "npm --prefix backend run build && npm --prefix frontend run build"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
