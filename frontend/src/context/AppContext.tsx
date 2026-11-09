@@ -18,6 +18,8 @@ interface AppContextType {
   toasts: Toast[];
   showToast: (message: any, type?: "success" | "error" | "info") => void;
   removeToast: (id: string) => void;
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const defaultSettings: AppSettings = {
@@ -37,6 +39,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [activeRagDoc, setActiveRagDoc] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   const showToast = (message: any, type: "success" | "error" | "info" = "info") => {
     let cleanMessage = "Notification received.";
@@ -104,7 +107,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         refreshHealth,
         toasts,
         showToast,
-        removeToast
+        removeToast,
+        mobileMenuOpen,
+        setMobileMenuOpen
       }}
     >
       {children}

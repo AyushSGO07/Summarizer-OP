@@ -84,48 +84,48 @@ export const SettingsPage: React.FC = () => {
   const activeModelName = provider === "mistral" ? mistralModel : geminiModel;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
       <Navbar
         title="Settings"
         badge="Engine & Knowledge Config"
         subtitle="Manage AI engine provider preferences, active models, RAG vector retrieval depth, and inspect server health."
       />
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSave} className="space-y-5 sm:space-y-6">
         {/* 1. AI Engine Configuration */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-6 bg-white">
+        <div className="glass-panel p-4 sm:p-6 md:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-5 sm:space-y-6 bg-white">
           <div className="flex items-center gap-3 border-b border-[#E2E8F0] pb-4">
             <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 text-purple-600 flex items-center justify-center shrink-0">
               <Cpu className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#0F172A]">AI Engine Configuration</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">AI Engine Configuration</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500">
                 Configure primary and fallback AI engines, model selection, and backend availability
               </p>
             </div>
           </div>
 
           {/* Secure Environment Notice */}
-          <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-200/80 flex items-center gap-3.5 text-xs text-purple-950 shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-purple-100 border border-purple-200 text-purple-700 flex items-center justify-center shrink-0">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-purple-50/70 border border-purple-200/80 flex items-start sm:items-center gap-3 text-xs text-purple-950 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-purple-100 border border-purple-200 text-purple-700 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
               <Lock className="w-4 h-4" />
             </div>
             <div className="space-y-0.5">
-              <span className="font-bold text-purple-900 block">Managed Environment Variables</span>
-              <p className="text-slate-600 text-xs">
+              <span className="font-bold text-purple-900 block text-xs">Managed Environment Variables</span>
+              <p className="text-slate-600 text-[11px] sm:text-xs leading-relaxed">
                 AI credentials are securely managed through server-side environment variables in your deployment settings.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Active Provider Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Active Provider
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                 {/* Mistral Provider Card */}
                 <button
                   type="button"
@@ -137,16 +137,16 @@ export const SettingsPage: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className="font-bold text-sm">Mistral AI</span>
+                    <span className="font-bold text-xs sm:text-sm">Mistral AI</span>
                     {serverMistralConfigured ? (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Configured
+                        Ready
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 flex items-center gap-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                        Not configured
+                        Unset
                       </span>
                     )}
                   </div>
@@ -164,16 +164,16 @@ export const SettingsPage: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className="font-bold text-sm">Google Gemini</span>
+                    <span className="font-bold text-xs sm:text-sm">Google Gemini</span>
                     {serverGeminiConfigured ? (
-                      <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200 flex items-center gap-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                        Configured
+                        Ready
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 flex items-center gap-1">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                        Not configured
+                        Unset
                       </span>
                     )}
                   </div>
@@ -219,17 +219,17 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           {/* Engine & Backend Connection Status Overview */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <span className="text-slate-500 font-medium block">Active Provider</span>
-              <span className="font-bold text-slate-900 capitalize text-sm mt-0.5 block">
+              <span className="font-bold text-slate-900 capitalize text-xs sm:text-sm mt-0.5 block">
                 {provider === "mistral" ? "Mistral AI" : "Google Gemini"}
               </span>
             </div>
 
             <div>
               <span className="text-slate-500 font-medium block">Active Model Name</span>
-              <span className="font-mono font-bold text-purple-700 text-sm mt-0.5 block truncate" title={activeModelName}>
+              <span className="font-mono font-bold text-purple-700 text-xs sm:text-sm mt-0.5 block truncate" title={activeModelName}>
                 {activeModelName}
               </span>
             </div>
@@ -238,7 +238,7 @@ export const SettingsPage: React.FC = () => {
               <span className="text-slate-500 font-medium block">Backend Connection Status</span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`w-2 h-2 rounded-full ${isBackendHealthy ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}></span>
-                <span className={`font-bold text-sm ${isBackendHealthy ? "text-emerald-700" : "text-amber-700"}`}>
+                <span className={`font-bold text-xs sm:text-sm ${isBackendHealthy ? "text-emerald-700" : "text-amber-700"}`}>
                   {isBackendHealthy ? "Connected & Operational" : "Backend Standby"}
                 </span>
               </div>
@@ -247,18 +247,18 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {/* 2. RAG & ChromaDB Configuration */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-6 bg-white">
+        <div className="glass-panel p-4 sm:p-6 md:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-5 sm:space-y-6 bg-white">
           <div className="flex items-center gap-3 border-b border-[#E2E8F0] pb-4">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shrink-0">
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#0F172A]">RAG & ChromaDB Configuration</h3>
-              <p className="text-xs text-slate-500">Control vector search depth and grounding precision</p>
+              <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">RAG & ChromaDB Configuration</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500">Control vector search depth and grounding precision</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-center">
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -279,10 +279,10 @@ export const SettingsPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
               <div className="flex justify-between text-slate-600">
                 <span>Embedding Model:</span>
-                <span className="text-slate-900 font-mono font-bold">all-MiniLM-L6-v2 (or Gemini)</span>
+                <span className="text-slate-900 font-mono font-bold truncate max-w-[160px]">all-MiniLM-L6-v2</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Vector Store:</span>
@@ -297,18 +297,18 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {/* 3. System Health & Deployment Status */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-4 bg-white">
+        <div className="glass-panel p-4 sm:p-6 md:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-4 bg-white">
           <div className="flex items-center gap-3 border-b border-[#E2E8F0] pb-4">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#0F172A]">System Health & Deployment Status</h3>
-              <p className="text-xs text-slate-500">Verified status of local and upstream deployment services</p>
+              <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">System Health & Deployment Status</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500">Verified status of local and upstream deployment services</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-slate-500 font-medium">Mistral AI Provider:</span>
               <div
@@ -321,7 +321,7 @@ export const SettingsPage: React.FC = () => {
                     serverMistralConfigured ? "bg-emerald-500" : "bg-amber-500"
                   }`}
                 ></span>
-                {serverMistralConfigured ? "Configured in Environment" : "Not configured"}
+                {serverMistralConfigured ? "Configured in Env" : "Not configured"}
               </div>
               <span className="text-[10px] text-slate-400 mt-1 block">Role: Primary Engine</span>
             </div>
@@ -338,7 +338,7 @@ export const SettingsPage: React.FC = () => {
                     serverGeminiConfigured ? "bg-indigo-500" : "bg-slate-400"
                   }`}
                 ></span>
-                {serverGeminiConfigured ? "Configured in Environment" : "Not configured"}
+                {serverGeminiConfigured ? "Configured in Env" : "Not configured"}
               </div>
               <span className="text-[10px] text-slate-400 mt-1 block">Role: Fallback Provider</span>
             </div>
@@ -357,7 +357,7 @@ export const SettingsPage: React.FC = () => {
         <button
           type="submit"
           disabled={saving}
-          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
         >
           <Check className="w-4 h-4" />
           <span>{saving ? "Saving Preferences..." : "Save Preferences"}</span>

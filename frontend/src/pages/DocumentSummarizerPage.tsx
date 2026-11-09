@@ -104,59 +104,47 @@ export const DocumentSummarizerPage: React.FC = () => {
       clearTimeout(timer2);
       clearTimeout(timer3);
 
-      if (!res || (!res.englishSummary && !res.hindiSummary)) {
-        throw new Error("Backend completed without returning a valid summary structure.");
-      }
-
       setResult(res);
-      showToast("Document summarized successfully!", "success");
+      showToast("Document analyzed & summary generated successfully!", "success");
     } catch (err: any) {
-      let msg = "Failed to process document.";
+      let backendDetail = "Failed to process document";
       if (err.response?.data?.error) {
-        msg = typeof err.response.data.error === "object"
-          ? JSON.stringify(err.response.data.error)
-          : String(err.response.data.error);
+        backendDetail = err.response.data.error;
       } else if (err.response?.data?.detail) {
-        msg = typeof err.response.data.detail === "object"
-          ? JSON.stringify(err.response.data.detail)
-          : String(err.response.data.detail);
-      } else if (err.response?.data?.message) {
-        msg = String(err.response.data.message);
+        backendDetail =
+          typeof err.response.data.detail === "string"
+            ? err.response.data.detail
+            : JSON.stringify(err.response.data.detail);
       } else if (err.message) {
-        msg = err.message;
+        backendDetail = err.message;
       }
 
-      if (msg.includes("A server error has occurred")) {
-        msg = "Server Error (500): The backend service encountered an issue. Please check your Vercel deployment functions log.";
-      }
-
-      setErrorMessage(msg);
-      showToast(msg, "error");
+      setErrorMessage(backendDetail);
+      showToast(backendDetail, "error");
     } finally {
       setLoading(false);
       setProcessingStage("");
-      setCurrentStep(0);
     }
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
       <Navbar
-        title="Document Summarization"
-        badge="Multi-Format Parser"
-        subtitle="Upload PDF, Word, Markdown, or text files to extract intelligence, key decisions, and Hindi translations."
+        title="Document Summarizer"
+        badge="Multi-format File Pipeline"
+        subtitle="Upload PDF, DOCX, TXT, or CSV files to extract executive takeaways, Hindi translations, and action items."
       />
 
       {/* Upload & Options Form */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-6 bg-white">
-        <form onSubmit={handleSummarize} className="space-y-6">
+      <div className="glass-panel p-4 sm:p-6 md:p-8 rounded-2xl border border-[#E2E8F0] shadow-card space-y-5 sm:space-y-6 bg-white">
+        <form onSubmit={handleSummarize} className="space-y-5 sm:space-y-6">
           {/* Drag & Drop Area */}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`cursor-pointer border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+            className={`cursor-pointer border-2 border-dashed rounded-xl sm:rounded-2xl p-5 sm:p-8 text-center transition-all ${
               isDragging
                 ? "border-purple-600 bg-purple-50 scale-[1.01]"
                 : file
@@ -173,49 +161,61 @@ export const DocumentSummarizerPage: React.FC = () => {
             />
 
             {file ? (
-              <div className="flex items-center justify-between max-w-md mx-auto p-3.5 rounded-xl bg-white border border-emerald-200 shadow-sm">
-                <div className="flex items-center gap-3 text-left overflow-hidden">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="flex items-center justify-between max-w-full sm:max-w-md mx-auto p-3 sm:p-3.5 rounded-xl bg-white border border-emerald-200 shadow-sm">
+                <div className="flex items-center gap-2.5 sm:gap-3 text-left overflow-hidden">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <FileCheck className="w-5 h-5" />
                   </div>
                   <div className="overflow-hidden">
-                    <div className="text-sm font-bold text-slate-900 truncate">{file.name}</div>
-                    <div className="text-xs text-slate-500">
-                      {(file.size / (1024 * 1024)).toFixed(2)} MB &bull; Ready for analysis
+                    <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">{file.name}</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500">
+                      {(file.size / (1024 * 1024)).toFixed(2)} MB &bull; Ready to process
                     </div>
                   </div>
                 </div>
+
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setFile(null);
-                    setResult(null);
-                    setErrorMessage(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                  title="Remove file"
+                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-2 shrink-0 cursor-pointer"
+                  title="Remove File"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-purple-100 border border-purple-200 text-purple-700 flex items-center justify-center mx-auto shadow-sm">
-                  <UploadCloud className="w-7 h-7" />
+              <div className="space-y-2 sm:space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center mx-auto shadow-sm">
+                  <UploadCloud className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">Click to upload or drag & drop</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Supports PDF, DOCX, TXT, MD, CSV, JSON, and media files (up to 80MB)
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">
+                    Drop your document here, or <span className="text-purple-600 underline">browse files</span>
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                    Supports PDF, DOCX, TXT, CSV, JSON, Markdown, and Audio files
                   </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                  {["PDF", "DOCX", "TXT", "CSV", "Audio"].map((fmt) => (
+                    <span
+                      key={fmt}
+                      className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"
+                    >
+                      .{fmt.toLowerCase()}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
           {/* Options Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <Languages className="w-3.5 h-3.5 text-purple-600" /> Language Output
@@ -223,7 +223,7 @@ export const DocumentSummarizerPage: React.FC = () => {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 bg-white border border-[#CBD5E1] focus:border-purple-600 rounded-xl text-slate-800 text-xs font-medium focus:outline-none shadow-sm"
+                className="w-full px-3.5 py-2.5 bg-white border border-[#CBD5E1] focus:border-purple-600 rounded-xl text-slate-800 text-xs font-medium focus:outline-none shadow-sm cursor-pointer"
                 disabled={loading}
               >
                 <option value="both">English + Hindi Translation (Recommended)</option>
@@ -239,7 +239,7 @@ export const DocumentSummarizerPage: React.FC = () => {
               <select
                 value={summaryLength}
                 onChange={(e) => setSummaryLength(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 bg-white border border-[#CBD5E1] focus:border-purple-600 rounded-xl text-slate-800 text-xs font-medium focus:outline-none shadow-sm"
+                className="w-full px-3.5 py-2.5 bg-white border border-[#CBD5E1] focus:border-purple-600 rounded-xl text-slate-800 text-xs font-medium focus:outline-none shadow-sm cursor-pointer"
                 disabled={loading}
               >
                 <option value="medium">Standard Executive Summary</option>
@@ -252,7 +252,7 @@ export const DocumentSummarizerPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading || !file}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm tracking-wide transition-all shadow-glow hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>
@@ -270,17 +270,17 @@ export const DocumentSummarizerPage: React.FC = () => {
 
         {/* Processing Indicator */}
         {loading && (
-          <div className="p-5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-4 animate-fadeIn">
+          <div className="p-4 sm:p-5 rounded-xl bg-purple-50/70 border border-purple-200 space-y-3 sm:space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between text-xs font-bold text-purple-900">
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                {processingStage || "Extracting document content..."}
+              <span className="flex items-center gap-2 truncate pr-2">
+                <Loader2 className="w-4 h-4 animate-spin text-purple-600 shrink-0" />
+                <span className="truncate">{processingStage || "Extracting document content..."}</span>
               </span>
-              <span className="text-purple-600">Please wait</span>
+              <span className="text-purple-600 shrink-0">Please wait</span>
             </div>
 
             {/* Step Progress Tracker */}
-            <div className="grid grid-cols-4 gap-2 pt-1">
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2 pt-1">
               {steps.map((st, idx) => (
                 <div
                   key={idx}
@@ -294,16 +294,16 @@ export const DocumentSummarizerPage: React.FC = () => {
               ))}
             </div>
 
-            <p className="text-[11px] text-slate-500 text-center">
-              Parsing file, processing text embeddings, invoking Mistral AI pipelines, and generating Hindi translations.
+            <p className="text-[10px] sm:text-[11px] text-slate-500 text-center">
+              Parsing file, processing text embeddings, running AI pipelines, and generating Hindi translations.
             </p>
           </div>
         )}
 
         {/* Visible Error Card */}
         {errorMessage && !loading && (
-          <div className="p-4 sm:p-5 rounded-xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row items-start justify-between gap-4 animate-fadeIn">
-            <div className="flex items-start gap-3">
+          <div className="p-3.5 sm:p-5 rounded-xl bg-rose-50 border border-rose-200 flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4 animate-fadeIn">
+            <div className="flex items-start gap-2.5 sm:gap-3">
               <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-rose-900 uppercase tracking-wide">
@@ -325,7 +325,7 @@ export const DocumentSummarizerPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setErrorMessage(null)}
-                className="p-1.5 text-rose-400 hover:text-rose-700 hover:bg-rose-100 rounded-lg transition-colors"
+                className="p-1.5 text-rose-400 hover:text-rose-700 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
                 title="Dismiss error"
               >
                 <X className="w-4 h-4" />
