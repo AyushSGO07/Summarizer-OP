@@ -30,7 +30,10 @@ export const documentController = {
       const text = ingested.text;
 
       if (!text || !text.trim()) {
-        return res.status(400).json({ success: false, error: "Could not extract readable text from uploaded file." });
+        return res.status(400).json({
+          success: false,
+          error: `Could not extract readable text from "${originalName}". Please ensure the file contains selectable text and is not encrypted or password-protected.`
+        });
       }
 
       console.log(`[Document Controller] Generating summary (${text.length} chars) with ${provider}...`);

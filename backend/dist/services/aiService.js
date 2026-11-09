@@ -116,6 +116,108 @@ async function callLlmDirect(prompt, systemPrompt, preferredProvider = "mistral"
     }
     throw new Error("No configured LLM provider available.");
 }
+// ----------------- Robust Document Text Extraction (PDF, DOCX, TXT) -----------------
+async function extractTextFromPdf(buffer, originalName) {
+    // Method 1: pdf-parse v2+ (PDFParse class)
+    try {
+        const pdfModule = require("pdf-parse");
+        const PDFClass = pdfModule.PDFParse || (typeof pdfModule === "function" ? pdfModule : null);
+        if (PDFClass && PDFClass.prototype?.getText) {
+            const parser = new PDFClass({ data: buffer });
+            try {
+                const res = await parser.getText();
+                const extracted = res?.text ? res.text.replace(/-- \d+ of \d+ --/g, "").trim() : "";
+                if (extracted && extracted.length > 20) {
+                    console.log(`[aiService] Successfully extracted ${extracted.length} chars from PDF using PDFParse.`);
+                    return extracted;
+                }
+            }
+            finally {
+                await parser.destroy?.().catch(() => { });
+            }
+        }
+        else if (typeof pdfModule === "function") {
+            const data = await pdfModule(buffer);
+            if (data?.text && data.text.trim().length > 20) {
+                console.log(`[aiService] Successfully extracted ${data.text.trim().length} chars from PDF using legacy pdf-parse.`);
+                return data.text.trim();
+            }
+        }
+    }
+    catch (err) {
+        console.warn("[aiService] pdf-parse failed, attempting fallbacks:", err?.message);
+    }
+    // Method 2: Gemini Multimodal PDF extraction (reads complex & scanned PDFs natively)
+    if (config_1.aiConfig.isGeminiConfigured) {
+        try {
+            console.log("[aiService] Extracting PDF via Gemini Multimodal OCR...");
+            const base64Pdf = buffer.toString("base64");
+            const key = config_1.aiConfig.geminiApiKey;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+            const response = await axios_1.default.post(url, {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            {
+                                inline_data: {
+                                    mime_type: "application/pdf",
+                                    data: base64Pdf
+                                }
+                            },
+                            {
+                                text: "Extract and transcribe all text, headings, data, and notes from this document verbatim into clean text. Do not add any summary, explanation, or commentary. Output the extracted document text only."
+                            }
+                        ]
+                    }
+                ]
+            }, { headers: { "Content-Type": "application/json" }, timeout: 35000 });
+            const geminiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (geminiText && geminiText.trim().length > 20) {
+                console.log(`[aiService] Successfully extracted ${geminiText.trim().length} chars from PDF via Gemini Multimodal.`);
+                return geminiText.trim();
+            }
+        }
+        catch (geminiErr) {
+            console.warn("[aiService] Gemini multimodal PDF extraction failed:", geminiErr?.message);
+        }
+    }
+    return "";
+}
+async function extractTextFromDocx(buffer) {
+    try {
+        const mammoth = require("mammoth");
+        const res = await mammoth.extractRawText({ buffer });
+        if (res?.value && res.value.trim().length > 0) {
+            console.log(`[aiService] Successfully extracted ${res.value.trim().length} chars from DOCX via mammoth.`);
+            return res.value.trim();
+        }
+    }
+    catch (docxErr) {
+        console.warn("[aiService] Mammoth DOCX parsing failed:", docxErr?.message);
+    }
+    return "";
+}
+async function extractTextFromBuffer(buffer, originalName) {
+    const lower = (originalName || "").toLowerCase();
+    if (lower.endsWith(".pdf")) {
+        return await extractTextFromPdf(buffer, originalName);
+    }
+    if (lower.endsWith(".docx") || lower.endsWith(".doc")) {
+        return await extractTextFromDocx(buffer);
+    }
+    // Standard plain text, markdown, CSV, TSV, JSON, etc.
+    try {
+        const raw = buffer.toString("utf-8");
+        if (lower.endsWith(".rtf")) {
+            return raw.replace(/\\par[d]?/g, "\n").replace(/\\[a-z0-9]+/gi, "").replace(/[{}]/g, "").trim();
+        }
+        return raw.trim();
+    }
+    catch {
+        return buffer.toString("latin1").trim();
+    }
+}
 // In-memory store for fallback RAG document indexing when Python microservice is unavailable
 let directRagIndexedDocs = [];
 exports.aiService = {
@@ -241,46 +343,31 @@ exports.aiService = {
                     headers: { ...form.getHeaders(), "Content-Length": form.getLengthSync() },
                     timeout: 5000
                 });
-                if (res.data?.text)
+                if (res.data?.text && res.data.text.trim().length > 0)
                     return res.data;
             }
             catch { }
         }
-        // Direct file text extraction
+        // Direct file text extraction using robust pdf-parse / mammoth / utf-8
         try {
             const buffer = fs_1.default.readFileSync(filePath);
-            const isUtf8Text = !originalName.endsWith(".pdf") && !originalName.endsWith(".docx");
-            let text = "";
-            if (isUtf8Text) {
-                text = buffer.toString("utf-8");
-            }
-            else if (originalName.endsWith(".pdf")) {
-                // Extract text streams from PDF buffer
-                const raw = buffer.toString("latin1");
-                const matches = raw.match(/\(([^()]{2,})\)/g) || [];
-                text = matches.map(m => m.slice(1, -1)).filter(s => s.length > 2 && !s.includes("\\")).join(" ");
-                if (!text || text.length < 50) {
-                    text = `Document: ${originalName}\nUploaded PDF content successfully ingested for executive analysis.`;
-                }
-            }
-            else {
-                text = buffer.toString("utf-8");
-            }
+            const text = await extractTextFromBuffer(buffer, originalName);
             return {
                 filename: originalName,
                 title: originalName,
                 source_type: "document",
-                text: text.trim(),
-                char_count: text.length
+                text: text ? text.trim() : "",
+                char_count: text ? text.length : 0
             };
         }
-        catch {
+        catch (err) {
+            console.error("[aiService] ingestFile error:", err?.message);
             return {
                 filename: originalName,
                 title: originalName,
                 source_type: "document",
-                text: `Content extracted from ${originalName}`,
-                char_count: originalName.length
+                text: "",
+                char_count: 0
             };
         }
     },
@@ -401,11 +488,17 @@ exports.aiService = {
             }
             catch { }
         }
-        let text = originalName;
+        let text = "";
         try {
-            text = fs_1.default.readFileSync(filePath, "utf-8");
+            const buffer = fs_1.default.readFileSync(filePath);
+            text = await extractTextFromBuffer(buffer, originalName);
         }
-        catch { }
+        catch (err) {
+            console.warn("[aiService] ragIndexFile extraction error:", err?.message);
+        }
+        if (!text || !text.trim()) {
+            text = `Document: ${originalName}`;
+        }
         return this.ragIndexText(text, originalName);
     },
     async ragQuery(query, chatHistory = [], k = 4, provider) {
